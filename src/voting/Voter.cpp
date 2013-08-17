@@ -3,9 +3,12 @@
 
 namespace voting {
 
-Voter::Voter(const Position &p) : position(p) {}
+Voter::Voter(const Position &p, const Position &boundary1, const Position &boundary2)
+    : PositionalAgent(p, boundary1, boundary2) {}
 
-Voter::Voter(std::initializer_list<double> pos) : position(pos) {}
+Voter::Voter(const Position &p) : PositionalAgent(p) {}
+
+Voter::Voter(const std::initializer_list<double> &pos) : PositionalAgent(pos) {}
 
 bool Voter::isFriend(eris_id_t voter) {
     return friends().count(voter) > 0;
@@ -32,7 +35,7 @@ const std::unordered_map<eris_id_t, SharedMember<Voter>>& Voter::friends() {
 double Voter::friendDistance(eris_id_t voter) {
     if (not isFriend(voter)) return -1;
 
-    return position.distance(friends_.at(voter)->position);
+    return position().distance(friends_.at(voter)->position());
 }
 
 }

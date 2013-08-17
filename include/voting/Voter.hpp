@@ -1,23 +1,37 @@
 #pragma once
-#include "voting/Position.hpp"
-#include <eris/Agent.hpp>
+#include <eris/Position.hpp>
+#include <eris/agent/PositionalAgent.hpp>
 #include <unordered_map>
 
 namespace voting {
 
 using namespace eris;
+using eris::agent::PositionalAgent;
 
 /** A "Voter" eris agent.  A voter has a Position and a set of friends.
  */
-class Voter : public Agent {
+class Voter : public PositionalAgent {
     public:
-        /** Constructs a voter at the given Position. */
-        Voter(const Position &p);
-        /** Constructs a voter at a position created at the given coordinates. */
-        Voter(std::initializer_list<double> pos);
         Voter() = delete;
 
-        virtual ~Voter() = default;
+        /** Constructs a Voter at location `p` who is bounded by the bounding box defined
+         * by the two boundary vertex positions.
+         *
+         * p, boundary1, and boundary2 must be of the same dimensions.  p is not required to be
+         * inside the bounding box (though subsequent moves will be).
+         *
+         * \throws std::length_error if p, boundary1, and boundary2 are not of the same dimension.
+         */
+        Voter(const Position &p, const Position &boundary1, const Position &boundary2);
+
+        /** Constructs a PositionalAgent at location `p` whose movements are not constrained.
+         */
+        Voter(const Position &p);
+
+        /** Constructs an unbounded PositionalAgent at the given coordinates. */
+        Voter(const std::initializer_list<double> &pos);
+
+        
 
         /** Returns true if the given voter is a friend of this voter. */
         bool isFriend(eris_id_t voter);
@@ -34,9 +48,6 @@ class Voter : public Agent {
          * \sa Position::distance
          */
         double friendDistance(eris_id_t voter);
-
-        /** The geometric position of the voter. */
-        Position position;
 
     protected:
         /** The map of friends of this voter. */

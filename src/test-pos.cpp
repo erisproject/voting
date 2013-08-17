@@ -1,7 +1,7 @@
-#include "voting/Position.hpp"
+#include <eris/Position.hpp>
 #include <iostream>
 
-using namespace voting;
+using namespace eris;
 
 int main() {
     Position p({1.0/4.0, 0, -44.32716494141});
