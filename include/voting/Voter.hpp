@@ -12,24 +12,7 @@ using eris::agent::PositionalAgent;
  */
 class Voter : public PositionalAgent {
     public:
-        Voter() = delete;
-
-        /** Constructs a Voter at location `p` who is bounded by the bounding box defined
-         * by the two boundary vertex positions.
-         *
-         * p, boundary1, and boundary2 must be of the same dimensions.  p is not required to be
-         * inside the bounding box (though subsequent moves will be).
-         *
-         * \throws std::length_error if p, boundary1, and boundary2 are not of the same dimension.
-         */
-        Voter(const Position &p, const Position &boundary1, const Position &boundary2);
-
-        /** Constructs a PositionalAgent at location `p` whose movements are not constrained.
-         */
-        Voter(const Position &p);
-
-        /** Constructs an unbounded PositionalAgent at the given coordinates. */
-        Voter(const std::initializer_list<double> &pos);
+        using PositionalAgent::PositionalAgent;
 
         
 

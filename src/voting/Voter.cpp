@@ -3,13 +3,6 @@
 
 namespace voting {
 
-Voter::Voter(const Position &p, const Position &boundary1, const Position &boundary2)
-    : PositionalAgent(p, boundary1, boundary2) {}
-
-Voter::Voter(const Position &p) : PositionalAgent(p) {}
-
-Voter::Voter(const std::initializer_list<double> &pos) : PositionalAgent(pos) {}
-
 bool Voter::isFriend(eris_id_t voter) {
     return friends().count(voter) > 0;
 }
