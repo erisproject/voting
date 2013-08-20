@@ -14,4 +14,14 @@ int main() {
     std::cout << "origin=" << origin << "\n";
     std::cout << "phalf =" << phalf << "\n";
     std::cout << "pneg  =" << pneg << "\n";
+
+    Position origin1 {0};
+    Position origin2 {0,0};
+    Position origin3 {0,0,0};
+    Position origin4 {0,0,0,0};
+
+    std::cout << "origin=" << origin1 << "\n";
+    std::cout << "origin=" << origin2 << "\n";
+    std::cout << "origin=" << origin3 << "\n";
+    std::cout << "origin=" << origin4 << "\n";
 }
