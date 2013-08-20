@@ -19,9 +19,6 @@ file(GLOB_RECURSE voting_include RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.
 file(GLOB_RECURSE voting_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/voting/*.cpp)
 file(GLOB voting_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cpp)
 
-message(${voting_src})
-message(${voting_scripts})
-
 # Add eris
 set(ERIS_INCLUDE ../eris/include)
 set(ERIS_LINK ../eris/build)
@@ -30,8 +27,6 @@ find_library(
     ERIS_LIB
     NAMES eris
     HINTS "${ERIS_LINK}")
-
-message(${ERIS_LIB})
 
 add_definitions(-std=c++11 -Wall -Werror)
 
