@@ -1,41 +1,76 @@
 #include "voting/PartyMover.hpp"
+#include <random>
+#include <eris/Random.hpp>
 #include "voting/Party.hpp"
 #include "voting/Poll.hpp"
+
+#include <iostream>
 
 namespace voting {
 
 using eris::Stepper;
 
-PartyMover::PartyMover(
-        eris_id_t party,
-        double initial_step,
-        double increase_count,
-        double min_step)
-    : InterStepper(Stepper(initial_step, increase_count, min_step, true)), party_(party) {}
+PartyMover::PartyMover(eris_id_t party, double step) : party_(party), step_gen_([step]() { return step; }) {}
+PartyMover::PartyMover(eris_id_t party, std::function<double()> step_gen) : party_(party), step_gen_(step_gen) {}
 
 void PartyMover::added() {
     dependsOn(party_);
 }
 
-bool PartyMover::should_increase() const {
+void PartyMover::optimize() const {
+    move_ = should_move();
+}
+
+double PartyMover::should_move() const {
     auto party = simAgent<Party>(party_);
 
-    if (not party->pollster)
-        party->pollster = simulation()->agentFilter().begin()->first;
+    double step_size = step_gen_(); 
+    std::cout << "Step size: " << step_size << "\n";
+
+    if (not party->pollster) {
+        auto pollsters = simulation()->agentFilter<Poll>();
+        if (pollsters.empty())
+            throw std::runtime_error("PartyMover optimizer failure: simulation has no Poll agent\n");
+        party->pollster = pollsters.begin()->first;
+    }
 
     auto pollster = simAgent<Poll>(party->pollster);
 
-    if (party->bindingLower()) return true;
-    if (party->bindingUpper()) return false;
-    if (pollster->allResults().size() < 2) return party->position()[0] >= 0; // No information; move away from 0
-    auto curr_poll = pollster->results(0);
-    auto prev_poll = pollster->results(-1);
-    if (curr_poll.closest_party[party] > prev_poll.closest_party[party])
-        // Whatever we did last time apparently helped, keep going
-        return stepper_.prev_up;
-    else
-        // Last time's move appears to not have helped; reverse direction
-        return !stepper_.prev_up;
+    std::unordered_map<double, int> polls;
+
+    polls[0.0] = pollster->conductPoll().closest_party[party];
+    if (!party->bindingLower())
+        polls[-step_size] = pollster->conductPollIf(
+                party,
+                party->toBoundary(party->position() - Position({ step_size }))).closest_party[party];
+    if (!party->bindingUpper())
+        polls[step_size] = pollster->conductPollIf(
+                party,
+                party->toBoundary(party->position() + Position({ step_size }))).closest_party[party];
+
+    double highest_step = 0;
+    int highest = -1;
+    int num_highest = 0;
+    for (auto &poll : polls) {
+        if (poll.second > highest) {
+            highest = poll.second;
+            highest_step = poll.first;
+            num_highest = 1;
+        }
+        else if (poll.second == highest) {
+            num_highest++;
+            if (std::uniform_int_distribution<int>(1, num_highest)(eris::Random::rng()) == 1) {
+                highest_step = poll.first;
+            }
+        }
+    }
+
+    return highest_step;
+}
+
+void PartyMover::apply() {
+    auto party = simAgent<Party>(party_);
+    party->moveBy(move_);
 }
 
 }
