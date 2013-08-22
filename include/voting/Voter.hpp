@@ -14,8 +14,6 @@ class Voter : public PositionalAgent {
     public:
         using PositionalAgent::PositionalAgent;
 
-        
-
         /** Returns true if the given voter is a friend of this voter. */
         bool isFriend(eris_id_t voter);
         /** Adds the given voter to this voter's friends. */
@@ -31,6 +29,12 @@ class Voter : public PositionalAgent {
          * \sa Position::distance
          */
         double friendDistance(eris_id_t voter);
+
+        /** Voter conviction is a function of the distance to the parties, where being closer to the
+         * nearer party results in higher conviction.  This default implementation simply returns
+         * 2 minus the distance to the nearest party, which will always be positive.
+         */
+        virtual double conviction();
 
     protected:
         /** The map of friends of this voter. */

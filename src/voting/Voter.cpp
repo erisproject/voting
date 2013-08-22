@@ -1,4 +1,5 @@
 #include "voting/Voter.hpp"
+#include "voting/Party.hpp"
 #include <iostream>
 
 namespace voting {
@@ -29,6 +30,15 @@ double Voter::friendDistance(eris_id_t voter) {
     if (not isFriend(voter)) return -1;
 
     return position().distance(friends_.at(voter)->position());
+}
+
+double Voter::conviction() {
+    double min_dist = 2;
+    for (auto &p : simulation()->agentFilter<Party>()) {
+        double pdist = position().distance(p.second->position());
+        if (pdist < min_dist) min_dist = pdist;
+    }
+    return 2 - min_dist;
 }
 
 }
