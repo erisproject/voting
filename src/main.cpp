@@ -4,6 +4,8 @@
 #include <eris/Random.hpp>
 #include "voting/Voter.hpp"
 #include "voting/Party.hpp"
+#include "voting/PartyMover.hpp"
+#include "voting/Poll.hpp"
 #include <iostream>
 #include <cstdio>
 
@@ -15,9 +17,13 @@ int main() {
     auto p_left  = sim->createAgent<Party>(-0.5, -1, 0);
     auto p_right = sim->createAgent<Party>(0.5, 0, 1);
     auto p_centre = sim->createAgent<Party>(0, 0.5, -0.5);
-    auto rng = eris::Random::rng();
-    if (false) rng = rng;
-    std::uniform_real_distribution<double> runif(-1, 1);
+
+/*    sim->createInterOpt<PartyMover>(p_left,   1.0/32, 4, 1.0/1048576, 3, 1);
+    sim->createInterOpt<PartyMover>(p_centre, 1.0/32, 4, 1.0/1048576, 3, 2);
+    sim->createInterOpt<PartyMover>(p_right,  1.0/32, 4, 1.0/1048576, 3, 0);*/
+
+    //auto rng = eris::Random::rng();
+    //std::uniform_real_distribution<double> runif(-1, 1);
 
     // Candidate num voters, based on having single element quantiles up to (only the smallest 5 listed for each)
     // 24: 5354228879
@@ -33,7 +39,8 @@ int main() {
     //  4: 11, 23, 35, 47, 71
     //  3: 5, 17, 29, 41, 53
 
-    int num_voters = 2519;
+    int num_voters = 999;
+    //int num_voters = 2519;
     //int num_voters = 5;
 
     for (int i = 0; i < num_voters; i++) {
@@ -45,11 +52,28 @@ int main() {
 //    auto v2 = sim->createAgent<Voter>(Position({0.4}));
 //    auto v3 = sim->createAgent<Voter>(Position({0.0}));
 
+    auto pollster = sim->createAgent<Poll>();
+
+/*    std::cout << "Parties:\n    id   @ position\n    ----   ---------\n";
+    for (auto &p : sim->agentFilter<Party>()) {
+        printf("    %-4ld @ %9.6f\n", p.first, p.second->position()[0]);
+    }*/
+    std::cout << "Running!\n";
+    for (int i = 1; i <= 1000; i++) {
+        sim->run();
+        std::cout << "Parties: ";
+        auto poll = pollster->conductPoll();
+        for (auto &p : sim->agentFilter<Party>()) {
+            printf("%ld@%11.8f [%7.4f%%], ", p.first, p.second->position()[0], poll.closest_party.at(p.first) * 100.0 / num_voters);
+        }
+        std::cout << "\n";
+    }
+
     std::cout << "Parties:\n    id   @ position\n    ----   ---------\n";
     for (auto &p : sim->agentFilter<Party>()) {
         printf("    %-4ld @ %9.6f\n", p.first, p.second->position()[0]);
     }
-    std::cout << "Voters:\n";
+    /*std::cout << "Voters:\n";
     int cols = 6, col = 0;
     std::cout << "    ";
     for (int i = 0; i < cols; i++)
@@ -63,7 +87,7 @@ int main() {
         printf("%-3ld @ %9.6f   ", v.first, v.second->position()[0]);
 //        std::cout << "voter[" << v.first << "] at: " << v.second->position() << "\n";
     }
-    std::cout << "\n";
+    std::cout << "\n";*/
 
     double prev_cutoff = -1.0;
     double cutoff = -1.0;
