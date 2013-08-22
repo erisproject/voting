@@ -1,10 +1,14 @@
 #include "voting/Poll.hpp"
 #include "voting/Party.hpp"
 #include "voting/Voter.hpp"
+#include <eris/Random.hpp>
+#include <iostream>
+#include <random>
 
 namespace voting {
 
-void Poll::advance() {
+
+Poll::poll Poll::conductPollIf(eris_id_t party_id, Position try_pos) {
     auto parties = simulation()->agentFilter<Party>();
     auto voters = simulation()->agentFilter<Voter>();
 
@@ -15,26 +19,34 @@ void Poll::advance() {
     for (auto &v : voters) {
         eris_id_t closest = 0;
         double min_dist = 0.0;
+        int identical = 0;
         for (auto &p : parties) {
-            double dist = v.second->position().distance(p.second->position());
+            const Position &pos = p.first == party_id ? try_pos : p.second->position();
+            double dist = v.second->position().distance(pos);
             if (closest == 0 or dist < min_dist) {
                 closest = p.first;
                 min_dist = dist;
+                identical = 1;
+            }
+            else if (dist == min_dist) {
+                // Found a party exactly the same distance away; we need to change randomly, such
+                // that each equal-distance party has an equal chance of being chosen
+                if (++identical > 1) {
+                    if (std::uniform_int_distribution<int>(1, identical)(eris::Random::rng()) == 1) {
+                        closest = p.first;
+                    }
+                }
             }
         }
 
         new_poll.closest_party[closest]++;
     }
 
-    results_.push_back(std::move(new_poll));
+    return new_poll;
 }
 
-const Poll::poll& Poll::results(int n) {
-    return results_.at(results_.size() - 1 + n);
-}
-
-const std::vector<Poll::poll>& Poll::allResults() {
-    return results_;
+Poll::poll Poll::conductPoll() {
+    return conductPollIf(0, Position(1));
 }
 
 }
