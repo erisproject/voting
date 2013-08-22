@@ -21,6 +21,16 @@ class Party : public PositionalAgent {
          */
         eris_id_t pollster = 0;
 
+        virtual bool moveToBoundary() const noexcept override { return true; }
+
+    protected:
+        /// Adds a PartyMover inter-optimizer when added
+        virtual void added() override;
+
+    private:
+        // The distribution from which we pull step sizes for this Party's PartyMover
+        std::uniform_real_distribution<double> step_dist_ = std::uniform_real_distribution<double>(1.0e-10, 0.1);
+
 
 };
 
