@@ -20,13 +20,17 @@ file(GLOB_RECURSE voting_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/voting/*.c
 file(GLOB voting_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cpp)
 
 # Add eris
+# If we're building in "foo", look for ../eris/foo for eris build dir, then
+# fall back to ../eris/build if that doesn't work.
+get_filename_component(BUILD_BASENAME "${CMAKE_BINARY_DIR}" NAME)
 set(ERIS_INCLUDE ../eris/include)
-set(ERIS_LINK ../eris/build)
+set(ERIS_BUILD_SAME "../eris/${BUILD_BASENAME}")
+set(ERIS_BUILD_BUILD ../eris/build)
 include_directories(${ERIS_INCLUDE})
 find_library(
     ERIS_LIB
     NAMES eris
-    HINTS "${ERIS_LINK}")
+    HINTS "${ERIS_BUILD_SAME}" "${ERIS_BUILD_BUILD}")
 
 add_definitions(-std=c++11 -Wall -Werror)
 
