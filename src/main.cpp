@@ -59,12 +59,12 @@ int main() {
         printf("    %-4ld @ %9.6f\n", p.first, p.second->position()[0]);
     }*/
     std::cout << "Running!\n";
-    for (int i = 1; i <= 1000; i++) {
+    for (int i = 1; i <= 100; i++) {
         sim->run();
         std::cout << "Parties: ";
         auto poll = pollster->conductPoll();
-        for (auto &p : sim->agentFilter<Party>()) {
-            printf("%ld@%11.8f [%7.4f%%], ", p.first, p.second->position()[0], poll.closest_party.at(p.first) * 100.0 / num_voters);
+        for (auto &p : { p_left, p_centre, p_right }) {
+            printf("%ld@%11.8f [%7.4f%%], ", p->id(), p->position()[0], poll.closest_party[p] * 100.0 / num_voters);
         }
         std::cout << "\n";
     }
