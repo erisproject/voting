@@ -25,7 +25,6 @@ double PartyMover::should_move() const {
     auto party = simAgent<Party>(party_);
 
     double step_size = step_gen_(); 
-    std::cout << "Step size: " << step_size << "\n";
 
     if (not party->pollster) {
         auto pollsters = simulation()->agentFilter<Poll>();
