@@ -1,6 +1,7 @@
 #pragma once
 #include <eris/Position.hpp>
 #include <eris/agent/PositionalAgent.hpp>
+#include <eris/Random.hpp>
 #include <unordered_map>
 
 namespace voting {
@@ -34,9 +35,14 @@ class Voter : public PositionalAgent {
          * the influence succeeds, false if it failed.  If the influence succeeds, this voter moves
          * to the position of the influencer and sets its just_moved field to true.
          *
+         * \param by the voter attempt to exhert influence
+         *
+         * \param drift if successful, the speed at which the influenced voter will drift back to
+         * their original posiiton.
+         *
          * This method calls influenceProbability to determine the probability of success.
          */
-        virtual bool attemptInfluence(const Voter &by);
+        virtual bool attemptInfluence(const SharedMember<Voter> &by, double drift);
 
         /** Returns the probability with which influence should succeed.
          *
@@ -59,9 +65,10 @@ class Voter : public PositionalAgent {
         virtual double influenceProbability(double my_conv, double their_conv) const;
 
         /** Voter conviction is a function of the distance to the parties, where being closer to the
-         * nearer party results in higher conviction.  This default implementation simply returns
-         * 1 minus half the distance to the nearest party (which is at most 2), which will always be
-         * in [0, 1].
+         * nearer party results in higher conviction.  This default implementation simply returns 1
+         * minus half the distance to the nearest party.  For parties and voters in 1-dimensional
+         * space constrained to the [-1, 1] range, this will always be a value in [0, 1].  Other
+         * ranges will need to override this method (or else deal with different conviction values).
          *
          * Note that this [0,1] return is not required, but relied upon in attemptInfluence
          * (truncating conviction values to [0,1]), so any overriding of this function that changes
@@ -74,13 +81,46 @@ class Voter : public PositionalAgent {
          */
         const Position naturalPosition() const;
 
+        /** Returns true if the voter has been moved by influence in the current inter-period
+         * optimization; this will be true only during the inter-period optimization apply() stage,
+         * and is reset to false during the voter's inter-period advance stage.
+         */
+        bool justMoved() const;
+
+        /** Sets the drift speed that the agent will drift back to their natural position.  This is
+         * typically called by an Influence optimizer, which, upon successful influence, both moves
+         * the voter and sets the drift.  (Thus different voters could have different staying power
+         * of their influence).
+         *
+         * \sa voting::Influence
+         */
+        virtual void setDrift(double drift);
+
+        /** Returns the voter's current drift speed.  Returns 0 if the voter is already at their
+         * natural position.
+         */
+        virtual double drift() const;
+
+        /** If not at the agent's natural position (i.e. the agent was moved by influence sometime
+         * in the past), and drift is positive, the agent takes a step of length `drift` (or less,
+         * if already within distance `drift`) towards their natural position.
+         */
+        virtual void advance() override;
+
+        static long DEBUG_influence_attempts;
+
     protected:
         /** The map of friends of this voter. */
         std::unordered_map<eris_id_t, SharedMember<Voter>> friends_;
 
     private:
-        std::unique_ptr<eris::Position> natural_pos_;
+        std::unique_ptr<const eris::Position> natural_pos_;
+        bool just_moved_ = false;
+        double drift_ = 0.0;
+        eris::Random::rng_t &rng_ = eris::Random::rng();
 
 };
 
 }
+
+// vim:tw=100

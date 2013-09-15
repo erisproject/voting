@@ -1,21 +1,17 @@
 #include "voting/Voter.hpp"
 #include "voting/Party.hpp"
-#include <eris/Random.hpp>
 #include <iostream>
 
 namespace voting {
+
+long Voter::DEBUG_influence_attempts = 0;
 
 bool Voter::isFriend(eris_id_t voter) const {
     return friends().count(voter) > 0;
 }
 
 void Voter::addFriend(eris_id_t voter) {
-    auto v = simAgent<Voter>(voter);
-    std::cout << "got the voter\n";
-    auto pair = std::make_pair(voter, v);
-    std::cout << "made the pair\n";
-    friends_.insert(pair);
-    std::cout << "inserted it\n";
+    friends_.insert(std::make_pair(voter, simAgent<Voter>(voter)));
 }
 
 void Voter::removeFriend(eris_id_t voter) {
@@ -42,9 +38,10 @@ double Voter::conviction() const {
     return 1.0 - min_dist/2.0;
 }
 
-bool Voter::attemptInfluence(const Voter &by) {
+bool Voter::attemptInfluence(const SharedMember<Voter> &by, double drift) {
+    DEBUG_influence_attempts++;
     double my_conv = conviction();
-    double their_conv = by.conviction();
+    double their_conv = by->conviction();
 
     double p = influenceProbability(my_conv, their_conv);
 
@@ -54,7 +51,7 @@ bool Voter::attemptInfluence(const Voter &by) {
     else if (p <= 0)
         success = false;
     else
-        success = std::bernoulli_distribution(p)(eris::Random::rng());
+        success = std::bernoulli_distribution(p)(rng_);
 
     if (success) {
         if (!natural_pos_) {
@@ -63,9 +60,12 @@ bool Voter::attemptInfluence(const Voter &by) {
             natural_pos_ = std::unique_ptr<Position>(new Position(position()));
         }
 
-        moveTo(by.position());
+        moveTo(by->position());
+        setDrift(drift);
+        just_moved_ = true;
     }
 
+    //std::cout << "Influence of " << id() << " by " << by->id() << " " << (success ? "succeeded!" : "failed.") << "\n";
     return success;
 }
 
@@ -83,6 +83,44 @@ double Voter::influenceProbability(double my_conv, double their_conv) const {
 const Position Voter::naturalPosition() const {
     if (natural_pos_) return *natural_pos_;
     return position();
+}
+
+bool Voter::justMoved() const {
+    return just_moved_;
+}
+
+void Voter::setDrift(double drift) {
+    drift_ = drift;
+}
+
+double Voter::drift() const {
+    return (natural_pos_ and *natural_pos_ != position())
+        ? drift_
+        : 0.0;
+}
+
+void Voter::advance() {
+    PositionalAgent::advance();
+
+    if (just_moved_) {
+        just_moved_ = false;
+    }
+    else {
+        double step_size = drift();
+//        std::cout << "Drifting " << step_size << "\n";
+        if (step_size > 0) {
+            Position step = *natural_pos_ - position();
+            double curr_dist = step.length();
+            if (curr_dist <= step_size) {
+                moveTo(*natural_pos_);
+                natural_pos_.reset();
+            }
+            else {
+                step *= step_size / curr_dist;
+                moveBy(step);
+            }
+        }
+    }
 }
 
 }
