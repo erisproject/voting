@@ -1,6 +1,7 @@
 #include "voting/Voter.hpp"
 #include "voting/Party.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace voting {
 
@@ -35,7 +36,7 @@ double Voter::conviction() const {
         double pdist = position().distance(p.second->position());
         if (pdist < min_dist) min_dist = pdist;
     }
-    return 1.0 - min_dist/2.0;
+    return std::max(1.0 - min_dist, 0.0);
 }
 
 bool Voter::attemptInfluence(const SharedMember<Voter> &by, double drift) {

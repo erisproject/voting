@@ -66,9 +66,7 @@ class Voter : public PositionalAgent {
 
         /** Voter conviction is a function of the distance to the parties, where being closer to the
          * nearer party results in higher conviction.  This default implementation simply returns 1
-         * minus half the distance to the nearest party.  For parties and voters in 1-dimensional
-         * space constrained to the [-1, 1] range, this will always be a value in [0, 1].  Other
-         * ranges will need to override this method (or else deal with different conviction values).
+         * minus the distance to the nearest party, truncated to 0 if negative.
          *
          * Note that this [0,1] return is not required, but relied upon in attemptInfluence
          * (truncating conviction values to [0,1]), so any overriding of this function that changes
