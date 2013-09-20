@@ -1,0 +1,274 @@
+\documentclass[12pt]{article}
+\usepackage{xltxtra}
+\usepackage{xunicode}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage[left=2.54cm,top=2.54cm,right=2.54cm,bottom=2.54cm,nohead]{geometry}
+\usepackage{enumerate}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[
+    backend=biber,
+    natbib=true,
+    style=authoryear-comp,
+    alldates=long,
+    dateabbrev=false,
+    datezeros=false
+]{biblatex}
+\addbibresource{refs.bib}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+\numberwithin{equation}{subsection}
+
+\bibliography{refs}
+
+\title{Voting simulation: an Eris application}
+\date{September 2013}
+\author{Jason Rhinelander}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+%\null\vfill
+%\begin{center}
+%    \copyright 2012 Jason Rhinelander
+%\end{center}
+%\newpage
+
+% Things I forget:
+% A \prec B -- A < B, but with curly <
+% A \succ B -- A > B, with curly >
+% \precsim, \succsim: same as above, but with ~ below.
+% \mathbb{R} -- double-struck R, i.e. rational numbers
+% \varnothing -- circle with a line through it, i.e. empty set; also available \emptyset, which uses 0 instead of circle
+% \subset, \subseteq, \subsetneq: subset (ambiguous), subset, strict subset
+% \superset, ...: same, for supersets
+% \dots: ellipsis (...)
+% \neg, \AND, \OR: logic symbols for not, and, or
+% \iff (alias for \Longleftrightarrow): two-way implication (i.e. two lines in arrow base)
+% \Longrightarrow: one-way implication (i.e. two lines in arrow base)
+% \cap and \cup for set intersection and union
+
+\section{Introduction}
+
+This paper proposes both a modelling technique and preliminary results of an application of that
+technique to analyse voting outcomes using richer models than is feasible in the traditional purely
+mathematical, equilibrium-based technique.  It accomplishes this through use of the ``Eris''
+library, a software library designed by the author for analysing agent-based economic computational
+modelling.  The model consists of Downsian-style voters and parties in a one-dimensional issue
+space, but several complexities not typically solvable in a mathematical framework: voter movement
+through a separate network of friends, and multiple parties with movement constraints.
+
+There are thus three main purposes to this paper: first, as a demonstration and practical
+application of the Eris software library; second, as a exploration of how a three-party,
+one-dimensional voting system can still be modelled; and finally as a demonstration of the
+usefulness of agent-based modelling as a technique for exploring economics models.
+
+\section{Literature}
+
+Agent-based modelling (ABM) and, specifically, its application to economics problems---sometimes
+referred to as Agent-based Computational Economics (ACE)---is a technique based on the principal of
+emergent behaviour from the complex interaction of relatively simple rules.
+
+One of the earliest works in this technique was the ``Game of Life'', created by mathematician John
+Conway in 1970.  Conway's structure consisted of grid points in a two-dimensional space where each
+point can be ``alive'' or ``dead'' with simple rules about the number of living neighbours
+determining the state of each grid point in the next period\footnote{Specifically, a point continues
+living it has 2 or 3 neighbours, comes to life if it has exactly three neighbours, and dies (or
+stays dead) otherwise.}.  From these relatively simple rules emerged great complexity over decades
+of research; in 2000, Paul Rendell released a Turing machine\footnote{Simply put, a Turing machine
+is a system that is theoretically capable of performing any arbitrary computational algorithm}
+implemented using only Conway's rules.
+
+In the discipline of economics, the use of computational modelling has gained some traction since
+the mid 1990s.  \citet{hce:Tesf} provides an excellent overview of the philosophy and strengths and
+weaknesses of ACE.  As she points out, ACE involves specifying less abstract individual behavioural
+models than equation-based modelling; the modelling emphasis is on structure rather than equilibrium,
+which allows freedoms in modelling that are limited by the assumptions required for ensuring
+equilibria in traditional models.  Shes argues that the place for ACE is as a complement, rather
+than substitute for mathematical modelling: in this purpose ACE allow us to examine not just the
+equilibria of a model, but how---and perhaps more importantly \emph{whether}---equilibria are
+attainable.  \citeauthor{hce:Tesf} suggests and warns that programming---which she sees as an
+underused but ``beautiful'' branch of mathematics---is insufficiently instructed to economics
+graduate students, despite what she sees as the great power of this mathematical approach to
+answering the problems of economics.  She concludes aptly that ``programming frees us to adapt the tool to
+the problem rather than the problem to the tool,'' recommending an increasing role for teaching
+programming skills at the graduate level.
+
+\citet{hce:Judd}, well known for his often-forceful advancement of computational techniques for
+economics problems, argues similarly, attempting to address many of the common criticisms of
+computational techniques.  \citeauthor{hce:Judd} reinterprets \citet{Tukey62} who, on the topic of
+statistical analysis, wrote that ``[t]he most important maxim for data analysis to heed, and one
+which many statisticians seem to have shunned, is this: `Far better an approximate answer to the
+\emph{right} question, which is often vague, than an \emph{exact} answer to the wrong question,
+which can always be made precise.' ''  Judd argues that \citeauthor{Tukey62}'s maxim applies equally
+well to economists and computational modelling as it did to statisticians and statistical analysis:
+that computational modelling allows analysis of questions that standard models simply cannot
+address; rather than shunning such questions economists should embrace computational techniques as a
+way to enlarge the set of questions economics can answer.
+
+On the more specific topic of voting models, the literature dates back to at least \citet{Hotel29}'s
+model of single-dimensional spatial competition, which formed the basic foundation of
+\citet{Downs57}'s seminal work showing that two-candidate models converge to both candidates
+locating at the median voter's position.  \citeauthor{Downs57} goes further, however, in examining
+various conditions in which parties do not converge to the median, such as imperfect information of
+political parties or voters, shifting tastes of voters, left open the possibility and explored some
+richer models using the one-dimensional space by clarifying the various assumptions required.
+\citeauthor{Downs57} explores some of these possibilities, concluding that voting models without
+strong restrictions can open up many other electoral outcomes other than parties locating at the
+median voter.
+
+One of the early works applying ACE to voting models is \citet{KMP92}, which found that parties in
+multidimensional issue spaces tend to coalesce to the central regions of the issue space.  The basic
+KMP model used in \citet{KMP92} and many later works postulates parties (or candidates) choosing
+locations in an $N$-dimensional space, and, unlike in more traditional spatial location models,
+imposes constraints on the information they have available while restricting the movements they may
+make to a neighbourhood of their current position.  \citet{KMP92}, and most papers following it, use
+periodic polling as the only source of the parties' information.  \citet{KMP98} followed up the
+earlier paper by looking more closely at the relationship between voter preferences and policy
+convergence.  \citet{Plumper08} uses a computational technique involving parties having unlimited
+polling ability and an ability to move to any location, but with voter ``memory'' changing the
+parties' effective locations to a weighted mean of current and previous positions.  The authors
+results show a failure of parties to converge to voter means in multi-party competition in
+two-dimensional policy space, but rather to obtain a sort of orbit around, but not at, the
+two-dimensional mean.\footnote{
+    Earlier work by this author in reproducing the work of \citet{Plumper08} has lead to some doubt
+    of the strength of the results of the paper: the few presented ``example'' outcomes in the
+    model, upon which much of the paper's conclusions are drawn, appear to be hand-picked examples
+    of interesting results rather than typical cases.  Though the paper also included statistical
+    analysis concluding that a larger number of parties increased party positioning volatility, that
+    analysis was also of questionable quality with likely severe biases because of the construction
+    of the data sets used for the analaysis.  More information is available in this author's report
+    on reimplementing \citet{Plumper08}, available at
+\url{https://imaginary.ca/papers/2013/pm08/report.pdf}.}
+\citet{Jackson03} looks at a computational single-dimension, two-party election in which parties
+adapt to voters, as in KMP, but voters also adapt their preferences to those of the parties.  An
+overview of some of these and other computational approaches to addressing political issues is to be
+found in \citet{Handbook29}.
+
+\section{Code}
+
+This project makes extensive use of the open source Eris library, a software library written in the
+C++ programming language\footnote{Specifically the C++11 specification of the language.} to serve as
+a framework for agent-based modelling in general, with a focus on useful tools for agent-based
+computational economics in particular.  The Eris source code is publically available at
+\url{https://github.com/erisproject/eris}, and API documentation for the project is publically
+available at \url{https://imaginary.ca/eris/api}.
+
+Eris itself is designed for problems that can be divided into sequential iterations supporting multiple
+types of interaction between stages.  The simulation itself consists of programming ``objects''
+where each object represents an agent, a market, a good, or set of optimization rules.
+
+For example, consider a very simple microeconomic model consisting of a price-setting monopolist and
+many (say 100) consumers, with various utility functions.  In the initial setup of the simulation,
+the monopolist would start out with an initial price, consumers would start out with an initial
+wealth, and a market object would be created with price and output bundles\footnote{There is no
+    intrinsic "money" good in Eris, though one created by convention is often useful; a market's
+    price can be measured in any arbitrary good, or even in any combination of goods (e.g.\ a bundle
+    of 1 left + 1 right shoes).  Thus general equilibrium exchange economies are perfectly
+analyzable using Eris, so long as some exchange mechanism is available.}
+
+In each iteration of the simulation consumers are given a simple choice: optimally spend available
+wealth on the monopolist's good.  Since the
+price is fixed, the decision is a matter of each consumer choosing a utility-maximizing amount.
+This requires, however, a Market object in which the consumer can purchase the good from the
+monopolist, and a \emph{intra-period optimization} object which attempts to solve the agent's
+optimization problem.  There are two of these currently included in Eris: ``MUPD'', which relies on
+the consumer having differentiable utility and looks at all available markets and equates the
+marginal utility per money unit between all of them; and an ``IncrementalBuyer'' object which
+optimizes by subdividing income into many small pieces, spending each increment of income on
+whichever yields the largest increased in utility.\footnote{In practice, the MUPD approach works
+    much better, but requires that the consumer have a closed-form, differentiable, convex utility
+    function.  IncrementalBuyer, on the other hand, is a relatively naïve approach that, while
+    putting less requirement on the utility function, often fails to obtain an optimal outcome,
+    particularly when there are multiple goods available for purchase and those goods are
+    complements or substitutes (since later decisions can potentially affect earlier decisions).
+}
+
+The monopolist, on the other hand, needs a way to make pricing decisions.  In a very simple example
+included in eris, the monopolist makes use of an \emph{inter-period optimization} object which works
+out a price based on stepping the monopolist's price up or down.  Initially, after the first period,
+the monopolist has only a single data point consisting of the number of sales of the previous
+period, and so can take a step upwards or downwards.  Once the process repeats a second time, the
+inter-period optimizer can react by either continuing in the same direction (e.g.\ if the last
+price increase resulted in increased profits, perform another increase) or reversing direction
+(e.g.\ if the last change was a price increase, but profits went down, reduce price this time).
+This optimizer also controls the size of the relative price change, taking larger steps after
+multiple steps in the same direction (e.g. multiple increases), or reducing the step size when the
+reversing direction.
+
+These pieces work together to achieve the same result as a traditional monopoly model after a few
+iterations of the simulation (specifically how many depend on the individual consumer utilities).
+Though not particular interesting on its own, the formulation of the problem conveys what makes ACE
+an exciting technique: the model structure requires specifying the behaviour of agents and how those
+agents interact; it does not impose equilibrium, but rather obtains equilibrium as an
+\emph{emergent} property of the simulation.  Furthermore it requires no differentiable demand
+function, but instead obtains its outcome through relative simple rules for the agents involved in
+the simulation.
+
+Extending the same model to a \emph{quantity}-setting monopolist is also possible, but slightly
+harder.  It now requires the creation of a considerably more complicated market structure, as
+consumer behaviour is still based on market price.  Thus Eris includes a sort of Walrasian actioneer
+(called, rather unimaginatively, a ``QMPricer'' (`Q'uantity `M'arket Pricer) intra-period
+optimizer).  This optimization mechanism is capable of performing a few price ``experiments'' in
+each round, attempt to determine the price that just barely exhausts the quantity the monopolist has
+provided in the market for a given period.  This complexity is, as in the above case, capable of
+matching the traditional quantity-setting monopolist outcome after several periods, though it
+typically takes longer (both in terms of number iterations and computational complexity) to settle
+down, this added time due to the added complexity of the auctioneer experimenting process.
+
+These two examples should, however, be regarded more as benchmarks of the basic building blocks of
+the library than useful applications of the library.  While Eris itself provides various useful
+functions (the set of which will undoubtedly grow as Eris develops), at its basic level Eris
+provides simply a structure in which agents can be programmed and given means to interact within and
+across time periods.
+
+In creating the voting model analyzed by this paper, much of the machinery described in the examples
+above (markets, goods, and prices) can simply be ignored; they are provided, but not required, for
+an Eris-based application.  The first step for the voting model was to create a type of agent that
+has a position (of arbitrary dimensions) and bounds on that position.  This was added to Eris itself
+(rather than the voting application) as a new type of agent called a ``PositionalAgent''.
+
+The voting application itself includes five classes: two adaptations (or ``instances'') of
+PositionalAgent (a Party class and a Voter class); a Poll agent that can be called upon to conduct a
+poll; a PartyMover inter-period optimizer class moves a given party by a small step based on polling
+results; and a Influence inter-period optimizer that influences the ``friends'' of voters.
+
+
+
+%implementation.
+%framework how the library worksmore It should be point
+%Optimization objet Eris provides a couple of
+%built-in object classes to do this optimization: one which depends on the consumers having
+%differentiable utility, which There n optimal have a choice: Consumers would respond to that price
+%in making a purchasing decision based on the price and their own rules.  For the next period, the
+%monopolist now has the number of sales in the previous period, and can adjust the next period's
+%price upward or downward.  After this process repeats again, the monopolist has additional
+%information on demand and can use the previous two steps to determine whether to take another price
+%change in the same direction, or whether to reverse direction.  This inter-period pricing decision
+%is known in Eris teminology as an \emph{inter-period optimization}, the logic for which is contained
+%in a dedicated object.
+%
+%step in th
+%downwardFor example, one set of consumer
+%behaviour .  Depending on the quantity sold in the period, the
+%monopolist could 
+%
+%The Eris library itself makes extensive use of object-oriented programming, whereby each component
+%of a simulation is in an independent ``object'' that has various methods or functions that are
+%called to interact with the object.  Eris models are designed to handle sequential time problems,
+%where the sequences can b be
+%some of the simple
+%examples included with Eris, and interlibrary mplements, at its core, a simulation, which itself includes multiple agents, markets,
+%goods, intra-period optimizers, and inter-period optimizers.
+%
+
+
+\end{document}

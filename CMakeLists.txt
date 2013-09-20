@@ -43,6 +43,7 @@ foreach(v_src ${voting_scripts})
     target_link_libraries("${v}" voting)
 endforeach()
 
+add_subdirectory(report EXCLUDE_FROM_ALL)
 
 #add_library(eris SHARED ${eris_src})
 
