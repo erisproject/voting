@@ -56,7 +56,7 @@
 % \Longrightarrow: one-way implication (i.e. two lines in arrow base)
 % \cap and \cup for set intersection and union
 
-\section{Introduction}
+\section{Introduction}\label{s:intro}
 
 This paper proposes both a modelling technique and preliminary results of an application of that
 technique to analyse voting outcomes using richer models than is feasible in the traditional purely
@@ -71,7 +71,7 @@ application of the Eris software library; second, as a exploration of how a thre
 one-dimensional voting system can still be modelled; and finally as a demonstration of the
 usefulness of agent-based modelling as a technique for exploring economics models.
 
-\section{Literature}
+\section{Literature}\label{s:lit}
 
 Agent-based modelling (ABM) and, specifically, its application to economics problems---sometimes
 referred to as Agent-based Computational Economics (ACE)---is a technique based on the principal of
@@ -153,7 +153,85 @@ adapt to voters, as in KMP, but voters also adapt their preferences to those of 
 overview of some of these and other computational approaches to addressing political issues is to be
 found in \citet{Handbook29}.
 
-\section{Code}
+\section{Model}\label{s:model}
+
+The model proposed by this paper consists of a Hotelling or Downsian style 1-dimensional voting
+space with boundaries at -1 and 1, with negative values considered ``left'' and positive values
+considered ``right''.\footnote{The end-points are arbitrary in a
+    mathematical sense, but in a computational sense matter: floating point values are stored with
+    the same \emph{relative} precision, which means values close to 0 have significantly more
+    \emph{absolute} precision than those close to 1.  Making the interval symmetric around 0
+    ensures that there is no possible left/right bias coming from numerical imprecision.  Other
+    potential ranges (not examined by this paper) are $\hdots, [0.5, 1], [1,2], [2,4], [4,8],
+    \hdots$, or subsets thereof, each of which has all values of identical numerical precision.
+}  There are a ``large number''---chosen to be 999---distributed in different methods (discussed
+below), and a small number (2 or 3) of parties.  There is also an asymmetric network of voter
+friendships that is used to allow voters to influence each other.  Parties get information in each
+stage from poll results and use this information to take a step right or left.
+
+Voters in this model have two effects.  First, and most obvious, voters vote for parties and can
+observe the party positions.  This paper currently assumes voters are sincere: that is, they vote
+for the nearest party.  The second effect of voters is that there is an underlying asymmetric
+network of friendships between voters, which is assumed independent of political position.
+Asymmetric in this context means that friendships are one-way, i.e.\ $v_A$ can have $v_B$ as a
+friend even if $v_B$ does not have $v_A$ as a friend.  This asymmetry could be easily resolved (i.e.\ $v_A$
+is a friend of $v_B$ if and only if $v_B$ is a friend of $v_A$), but it is not clear that this would
+qualitatively change the result.
+
+The role of friendships in the model is to (temporarily) influence the political position of
+friends.  Conceptually, this is capturing a notion that individuals---who make friendships based on
+external factors such as office coworkers, familial connections, or neighbourhood proximity---want
+their friends to adopt their own beliefs.  Parallels of this in the real world are common in the
+political world, where armies of volunteers (who agree strongly with their affiliated party's
+political position) attempt to spread their faith in their party to nearby fellow voters.  Another
+example is to be found in the devoutly religious, who often receive religious messages as to the
+importance of spreading the religious message, e.g.\ spreading ``the word of God.''
+
+Closely related to the model's friendships is a concept of ``voter conviction'', which is a measure
+of closeness to the nearest party.  Nearby voters have higher conviction, as they are assumed to
+feel more connection with the political system (since there is a party relatively nearby), while
+those further away from the nearest party feel more ``left out'' and are thus more apathetic, i.e.\
+have lower conviction.  To continue the previous examples, the conviction of a religious
+practitioner or political volunteer is thus assumed to be stronger for parishioners or volunteers
+closer to that of the religion or party than those whose personal beliefs deviate more strongly.  A
+Romney supporter who agrees with all of Romney's policies, for instance, would be expected to be
+more passionate in their support of Romney than a voter who votes for Romney only because he is the
+marginally closer candidate of two distant options.
+
+Conviction and friendships enter together in how voters influence each other.  At the beginning of
+each stage of the model, each voter attempts to influence a random subset of his friends.\footnote{
+    The model was also attempted with the alternative formation: each of a random set of voters
+    attempts to influence all of his friends.  There was no apparent difference in outcomes between
+    the two approaches: each is just a different way of selecting a random set of friendships.
+}  If successful, the influenced voter (i.e.\ the friend) changes their position to that of the
+influencer; if unsuccessful, the friend doesn't move.  Success is a random outcome, the probability
+of which is determined by the convictions of the two voters: voters with high conviction are more
+likely to convince friends to move than voters with low conviction; conversely, voters with high
+conviction are less likely to be convinced by friend than voters with low conviction.
+
+This procedure alone, however, results in absorbing states: in each iterations of the game, more
+populous regions close to an existing party tend to absorb voters from distant regions, who then
+strengthen this absorbing effect until voter distribution converges in probability to a single
+point.  To counter this problem, the idea of voter ``drift'' was introduced: voters are assumed to have a
+natural preference at their initial starting position.  When influenced, a voter jumps to the influencer's
+location, but then over time drifts back towards their starting location until they reach it or are
+influenced again.
+
+Parties in the model have only limited information on voters, conducted through polling.
+The remaining pieces 
+An important aspect of voter positions that matters to the model is the concept of voter
+``conviction'': voters who are located more closely to the nearest party feel better represented by
+the party which, in some sense, validates the voters beliefs.  Voters far away from all parties are
+``left out'' and apathetic, i.e. 
+that is independent of  Each voter has a fixed set of friends who he
+attempts to influence to adopt his own position.   underlying network of friends which
+are randomly assigned
+(999) of voters and 3 parties The model proceeds in stages involving two types of change: each party of the game Parties can move 
+
+
+\section{Code}\label{s:code}
+
+\subsection{Eris}\label{s:code:eris}
 
 This project makes extensive use of the open source Eris library, a software library written in the
 C++ programming language\footnote{Specifically the C++11 specification of the language.} to serve as
@@ -227,8 +305,10 @@ down, this added time due to the added complexity of the auctioneer experimentin
 These two examples should, however, be regarded more as benchmarks of the basic building blocks of
 the library than useful applications of the library.  While Eris itself provides various useful
 functions (the set of which will undoubtedly grow as Eris develops), at its basic level Eris
-provides simply a structure in which agents can be programmed and given means to interact within and
+provides simply a structure in which agents can be easily programmed and given means to interact within and
 across time periods.
+
+\subsection{Eris application: Voting model}
 
 In creating the voting model analyzed by this paper, much of the machinery described in the examples
 above (markets, goods, and prices) can simply be ignored; they are provided, but not required, for
@@ -236,11 +316,83 @@ an Eris-based application.  The first step for the voting model was to create a 
 has a position (of arbitrary dimensions) and bounds on that position.  This was added to Eris itself
 (rather than the voting application) as a new type of agent called a ``PositionalAgent''.
 
-The voting application itself includes five classes: two adaptations (or ``instances'') of
-PositionalAgent (a Party class and a Voter class); a Poll agent that can be called upon to conduct a
+The voting application itself includes five classes: two adaptations (or ``subclasses'') of
+PositionalAgent (Party and Voter); a Poll agent that can be called upon by other agents to conduct a
 poll; a PartyMover inter-period optimizer class moves a given party by a small step based on polling
 results; and a Influence inter-period optimizer that influences the ``friends'' of voters.
 
+
+\section{Future Work}
+
+There is a bevy of changes that could be made to the model quite easily to examine how differences
+in the behaviour of model agents affects the outcome.  To summarize just a few:
+
+\begin{itemize}
+    \item
+        Influence could depend not only on the two agents' conviction levels, but also on the
+        distance between the two agents.  This could capture the intuitive notion that it ought to
+        be easier for, say, a moderate-left voter located near his party to influence the opinions
+        of a far-left voter than to influence the opinion of a far-right voters: in other words,
+        it's easier to convince people to take a small move than a big move, given comparable
+        conviction levels.
+    \item
+        The polling/election system here is very simple: voters simply choose the most preferred candidate,
+        and there is no distinction between polls and elections.  Changing this would form the most
+        immediate next step in enhancing this paper.  This would capture the disconnect that is
+        often seen in real-world polling that differs considerably from actual election
+        outcomes.\footnote{
+            For example, recent provincial elections in British Columbia and Alberta have both badly
+            mis-predicted election results well outside the bounds of confidence internals that
+            sampling statistics should follow.  \citet{ipsos:prebc}, for instance, reports a
+            prediction far from the actual results of the following day's election.
+            \citet{ipsos:postbc} attempts to justify the corporation's pre-election polls, but does a poor job of
+            it, mostly ignoring the likely fundamental issue that poll respondents are simple not a
+        good representative of voters.}  Adding a recurring election stage (e.g.\ every $n$ periods,
+        where $n$ is either fixed or a random draw from some distribution) to the computational model developed in this
+        paper would be relatively easy: the more complicated part would be in figuring out the
+        behaviours that we actually want to capture.  Some interesting poll/election techniques that would be
+        worth exploring are:
+        \begin{itemize}
+            \item
+                Polls here are full-population polls (and thus equivalent to an election where everyone
+                participates).  Poll sampling (e.g. choosing a small fraction of voters) might be an
+                interesting way to introduce a sort of ``realistic noise'' to the process.
+            \item
+                Voter apathy in the current model is captured (only) in a low conviction value.  It could
+                interestingly be incorporated into election outcomes: apathetic voters might still respond
+                to polls, but wouldn't turn out to vote.
+            \item
+                In reality, electoral behaviour is considerably more complicated that voting for the
+                nearest party: voters, especially in a first-past-the-post election system often
+                vote strategically.  Some proportion of voters (perhaps inversely proportional to
+                conviction) could, for example, use the most recent polling information to choose a
+                second-best party to prevent the voter's worst choice from winning.  The polling
+                mechanism could be updated to match this intended voting or left as is, so that
+                polls are only a rough signal of voter intentions.
+        \end{itemize}
+
+    \item
+        The voter friend network could be made dynamic, so that new friendships form and existing
+        friendships fade, with new friendships being more likely among nearby voters, and lost
+        friendships being more likely among far off voters.  The model as currently formulated
+        assumes that friendships are entirely exogenous, but that assumption seems unrealistic.
+
+\end{itemize}
+
+\section{Conclusion}\label{s:conc}
+
+The Eris framework and voting model developed in this paper offers a compelling direction for
+research into voting outcomes.  Unlike traditional models, where modelling decisions are often
+influenced by mathematical tractability, ACE models in general---and this voting model in
+particular---offer a way to ask questions and explore models that go far beyond the capabilities of
+traditional models.  Instead of asking ``can model X be solved for an equilibrium'' we can simply
+simulate it and see if an equilibrium emerges.  Our modelling requirements become fundamentally
+different: rather than calculating optimal behaviour
+
+This is, however, only a complement rather than a substitute for a proof-based approach: we could
+turn up wrong answers, could randomly get spurious outcomes that look like equilibria but aren't, or
+could fail to find some or all equilibria.  These are, as \citet{hce:Judd} and \citet{Tukey62} point
+out, not failures of a 
 
 
 %implementation.
