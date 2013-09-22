@@ -271,11 +271,6 @@ int main(int argc, char **argv) {
         }
     }
 
-//
-//    auto v1 = sim->createAgent<Voter>(Position({-0.5}));
-//    auto v2 = sim->createAgent<Voter>(Position({0.4}));
-//    auto v3 = sim->createAgent<Voter>(Position({0.0}));
-
     auto pollster = sim->createAgent<Poll>();
 
 /*    std::cout << "Parties:\n    id   @ position\n    ----   ---------\n";
@@ -290,7 +285,7 @@ int main(int argc, char **argv) {
 
     std::cout << "\e[1;0H"; // Position at line 0, col 0
     std::cout << "Running (" << run_details << ")\n";
-//    if (0)
+
     auto last = steady_clock::now();
     for (int i = 1; i <= params.iterations; i++) {
         sim->run();
@@ -298,12 +293,6 @@ int main(int argc, char **argv) {
         double speed = 1.0/duration_cast<duration<double>>(now - last).count();
         last = now;
         std::cout << "\e[2;0HIteration " << i << " (" << speed << " iterations/s\n";
-/*        std::cout << "Parties: ";
-        auto poll = pollster->conductPoll();
-        for (auto &p : { p_left, p_centre, p_right }) {
-            printf("%ld@%11.8f [%7.4f%%], ", p->id(), p->position()[0], poll.closest_party[p] * 100.0 / num_voters);
-        }
-        std::cout << "\n";*/
 
         voterHist(sim);
     }
@@ -315,54 +304,5 @@ int main(int argc, char **argv) {
         printf("    %-4ld @ %9.6f   [%9.6f,%9.6f]\n", p.first, p.second->position()[0],
                 p.second->lowerBound()[0], p.second->upperBound()[0]);
     }
-    /*std::cout << "Voters:\n";
-    int cols = 6, col = 0;
-    std::cout << "    ";
-    for (int i = 0; i < cols; i++)
-        std::cout << "id  @ position    ";
-    std::cout << "\n    ";
-    for (int i = 0; i < cols; i++)
-        std::cout << "---   ---------   ";
-    for (auto &v : sim->agentFilter<Voter>()) {
-        if (col++ % cols == 0)
-            std::cout << "\n    ";
-        printf("%-3ld @ %9.6f   ", v.first, v.second->position()[0]);
-//        std::cout << "voter[" << v.first << "] at: " << v.second->position() << "\n";
-    }
-    std::cout << "\n";*/
-
-    /*
-    double prev_cutoff = -1.0;
-    double cutoff = -1.0;
-    auto cumulative = [&](SharedMember<Voter> v) { return v->position()[0] <= cutoff; };
-    auto increment = [&](SharedMember<Voter> v) {
-        double p = v->position()[0];
-        return p <= cutoff and p > prev_cutoff;
-    };
-    int boxes = 20;
-    for (int i = 0; i <= boxes; i++) {
-        cutoff = i * 2.0 / boxes - 1;
-        prev_cutoff = (i-1) * 2.0 / boxes - 1;
-        int cum_count = sim->agentFilter<Voter>(cumulative).size();
-        int inc_count = sim->agentFilter<Voter>(increment).size();
-        std::cout << "Voters in (" << prev_cutoff << "," << cutoff << "]: " << inc_count << "; <= " << cutoff << ": " << cum_count << "\n";
-    }
-    */
-//    std::cout << "v1 (id=" << v1->id() << ") at: " << v1->position() << "\n";
-//    std::cout << "v2 (id=" << v2->id() << ") at: " << v2->position() << "\n";
-//    std::cout << "v3 (id=" << v3->id() << ") at: " << v3->position() << "\n";
-
-//    std::cout << "Adding 1\n";
-//    v3->addFriend(v1);
-//    std::cout << "Added 1\n";
-//    v3->addFriend(v2);
-//    std::cout << "Added 2\n";
-//    eris_id_t v3id = v3;
-//
-//    std::cout << "v3id = " << v3id << "\n";
-//
-//    for (auto &f: v3->friends()) {
-//        std::cout << "v3 friend at position " << f.second->position() << "\n";
-//    }
 
 }
