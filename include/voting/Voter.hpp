@@ -105,8 +105,6 @@ class Voter : public PositionalAgent {
          */
         virtual void advance() override;
 
-        static long DEBUG_influence_attempts;
-
     protected:
         /** The map of friends of this voter. */
         std::unordered_map<eris_id_t, SharedMember<Voter>> friends_;

@@ -297,8 +297,7 @@ int main(int argc, char **argv) {
         auto now = steady_clock::now();
         double speed = 1.0/duration_cast<duration<double>>(now - last).count();
         last = now;
-        std::cout << "\e[2;0HIteration " << i << " (" << speed << " iterations/s; " << Voter::DEBUG_influence_attempts << " influence attempts):\n";
-        Voter::DEBUG_influence_attempts = 0;
+        std::cout << "\e[2;0HIteration " << i << " (" << speed << " iterations/s\n";
 /*        std::cout << "Parties: ";
         auto poll = pollster->conductPoll();
         for (auto &p : { p_left, p_centre, p_right }) {

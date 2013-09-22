@@ -5,8 +5,6 @@
 
 namespace voting {
 
-long Voter::DEBUG_influence_attempts = 0;
-
 bool Voter::isFriend(eris_id_t voter) const {
     return friends().count(voter) > 0;
 }
@@ -40,7 +38,6 @@ double Voter::conviction() const {
 }
 
 bool Voter::attemptInfluence(const SharedMember<Voter> &by, double drift) {
-    DEBUG_influence_attempts++;
     double my_conv = conviction();
     double their_conv = by->conviction();
 
