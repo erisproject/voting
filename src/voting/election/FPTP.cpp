@@ -72,6 +72,7 @@ const std::unordered_map<eris_id_t, int>& FPTP::votes() {
 }
 
 void FPTP::advance() {
+    Election::advance();
     winner_ = 0;
     votes_.clear();
 }

@@ -19,7 +19,7 @@ class Election : public eris::Agent {
     public:
 		/** Creates an election that occurs every `period` simulation periods.
 		 */
-		Election(int period);
+		Election(unsigned int period);
 
 		/** Creates an election that occurs every time the given function/lambda returns true.  The
 		 * function will be called exactly once per inter-optimization, and, when it returns true,
@@ -29,7 +29,7 @@ class Election : public eris::Agent {
 
         /** Returns true if the current period is an election period.
          */
-        bool electionPeriod();
+        bool electionPeriod() const;
 
 		/** Conducts an election at the current positions, returns the winner.  Abstract method.
 		 */
@@ -42,6 +42,7 @@ class Election : public eris::Agent {
 
 	private:
         bool election_period_ = false;
+        unsigned int election_counter_ = 0;
         std::function<bool()> election_;
 };
 
