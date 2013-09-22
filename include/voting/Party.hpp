@@ -14,13 +14,8 @@ class Party : public PositionalAgent {
     public:
         using PositionalAgent::PositionalAgent;
 
-        /** The ID if the pollster.  If this is not set when needed, it'll be updated to the first
-         * Poll agent returned from the simulation.  If you want to do anything with multipler
-         * pollsters, you'll have to make sure this gets set to the right one rather than rely on
-         * the automatic updating.
+        /** Overridden to make movements bind to the position boundaries. 
          */
-        eris_id_t pollster = 0;
-
         virtual bool moveToBoundary() const noexcept override { return true; }
 
     protected:

@@ -1,4 +1,5 @@
 #include "voting/Poll.hpp"
+#include "voting/Election.hpp"
 #include "voting/Party.hpp"
 #include "voting/Voter.hpp"
 #include <eris/Random.hpp>
@@ -9,6 +10,11 @@ namespace voting {
 
 
 Poll::poll Poll::conductPollIf(eris_id_t party_id, Position try_pos) {
+    // First check to make sure this isn't an election period:
+    for (auto &election : simulation()->agentFilter<Election>()) {
+        if (election.second->electionPeriod())
+            throw std::runtime_error("Cannot poll during an election period");
+    }
     auto parties = simulation()->agentFilter<Party>();
     auto voters = simulation()->agentFilter<Voter>();
 

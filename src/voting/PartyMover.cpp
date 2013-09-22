@@ -1,4 +1,5 @@
 #include "voting/PartyMover.hpp"
+#include "voting/Election.hpp"
 #include <random>
 #include <eris/Random.hpp>
 #include "voting/Party.hpp"
@@ -24,19 +25,23 @@ void PartyMover::optimize() const {
 double PartyMover::should_move() const {
     auto party = simAgent<Party>(party_);
 
-    double step_size = step_gen_(); 
-
-    if (not party->pollster) {
-        auto pollsters = simulation()->agentFilter<Poll>();
-        if (pollsters.empty())
-            throw std::runtime_error("PartyMover optimizer failure: simulation has no Poll agent\n");
-        party->pollster = pollsters.begin()->first;
+    for (auto &election : simulation()->agentFilter<Election>()) {
+        if (election.second->electionPeriod()) {
+            // No movement during an election period.
+            return 0.0;
+        }
     }
 
-    auto pollster = simAgent<Poll>(party->pollster);
+    auto pollsters = simulation()->agentFilter<Poll>();
+    if (pollsters.empty())
+        throw std::runtime_error("PartyMover optimizer failure: simulation has no Poll agent\n");
+    auto pollster = pollsters.begin()->second;
 
     std::unordered_map<double, int> polls;
 
+    double step_size = step_gen_(); 
+
+    // Conduct three polls: a "don't move", one step left, and one step right.
     polls[0.0] = pollster->conductPoll().closest_party[party];
     if (!party->bindingLower())
         polls[-step_size] = pollster->conductPollIf(
@@ -68,8 +73,10 @@ double PartyMover::should_move() const {
 }
 
 void PartyMover::apply() {
-    auto party = simAgent<Party>(party_);
-    party->moveBy(move_);
+    if (move_ != 0.0) {
+        auto party = simAgent<Party>(party_);
+        party->moveBy(move_);
+    }
 }
 
 }
