@@ -19,6 +19,8 @@ file(GLOB_RECURSE voting_include RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.
 file(GLOB_RECURSE voting_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/voting/*.cpp)
 file(GLOB voting_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cpp)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/results)
+
 # Add eris
 # If we're building in "foo", look for ../eris/foo for eris build dir, then
 # fall back to ../eris/build if that doesn't work.
