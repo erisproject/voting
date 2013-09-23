@@ -1,0 +1,58 @@
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = @PROJECT_NAME@
+PROJECT_NUMBER         = v@VOTING_VERSION_MAJOR@.@VOTING_VERSION_MINOR@.@VOTING_VERSION_PATCH@
+PROJECT_BRIEF          = "Eris-based voting model"
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/../include @CMAKE_CURRENT_SOURCE_DIR@/../src
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.cpp *.hpp
+RECURSIVE              = YES
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
+
+QUIET                  = YES
+
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/..
+STRIP_FROM_INC_PATH    = @CMAKE_CURRENT_SOURCE_DIR@/../include
+
+JAVADOC_AUTOBRIEF      = YES
+
+GENERATE_HTML          = YES
+HTML_FILE_EXTENSION    = .xhtml
+HTML_OUTPUT            = api
+LAYOUT_FILE            = DoxygenLayout.xml
+
+GENERATE_LATEX         = NO
+LATEX_OUTPUT           = api-latex
+PDF_HYPERLINKS         = YES
+USE_PDFLATEX           = YES
+PAPER_TYPE             = letter
+
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+
+USE_MATHJAX            = YES
+MATHJAX_RELPATH        = ../MathJax
+
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+#CALL_GRAPH             = YES
+#CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the preprocessor
+#---------------------------------------------------------------------------
+#ENABLE_PREPROCESSING   = YES
+#MACRO_EXPANSION        = YES
+#SKIP_FUNCTION_MACROS   = NO
+
+#---------------------------------------------------------------------------
+# Configuration options related to the dot tool
+#---------------------------------------------------------------------------
