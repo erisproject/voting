@@ -370,7 +370,7 @@ int main(int argc, char **argv) {
                 return sd + (x - winner_mean) * (x - winner_mean);
             }) / (winner_pos.size() - 1));
 
-            if (parties[winner] == 1) { // Left-most party
+            if (parties[winner] != 1) { // Not the left-most party
                 winnerNL_pos.push_back(pos);
                 winnerNL_mean = std::accumulate(winnerNL_pos.cbegin(), winnerNL_pos.cend(), 0.0) / winnerNL_pos.size();
                 winnerNL_sd = sqrt(std::accumulate(winnerNL_pos.cbegin(), winnerNL_pos.cend(), 0.0, [&](const double sd, const double x) {
