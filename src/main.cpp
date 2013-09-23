@@ -86,8 +86,8 @@ void voterHist(const Eris<Simulation> &sim) {
     std::cout << "\n\n";
 }
 
-enum voter_dist { dist_even, dist_uniform, dist_beta22, dist_beta55 };
-enum election_type { elect_periodic, elect_random }; //, elect_normal };
+enum class dist { even, uniform, beta22, beta55 };
+enum class election { periodic, random }; //, normal };
 struct prog_params {
     unsigned int voters = 999;
     unsigned int parties = 3;
@@ -99,8 +99,8 @@ struct prog_params {
     bool constr_parties = false;
     bool show_hist = false;
     double constr_left = 2; // Anything > 1 is considered unset.
-    voter_dist vdist = dist_beta55;
-    election_type etype = elect_periodic;
+    dist vdist = dist::beta55;
+    election etype = election::periodic;
     unsigned int eperiod = 50;
 //    double enorm_mean = 50;
 //    double enorm_stdev = 50;
@@ -160,7 +160,7 @@ prog_params parseCmdArgs(int argc, char **argv) {
         TCLAP::ValuesConstraint<std::string> distValues(dists);
         TCLAP::ValueArg<std::string> distArg("d", "voter-distribution", "Distribution of voters: 'even' spreads voters evenly over the range; "
                 "'uniform' uses a random uniform distribution; 'beta22' use a beta(2,2) distribution; 'beta55' uses a beta(5,5) distribution.",
-                false, p.voters == dist_even ? "even" : p.voters == dist_uniform ? "uniform" : p.voters == dist_beta22 ? "beta22" : "beta55",
+                false, p.vdist == dist::even ? "even" : p.vdist == dist::uniform ? "uniform" : p.vdist == dist::beta22 ? "beta22" : "beta55",
                 &distValues, cmd);
 
         RangeConstraint<unsigned int> iterConstr(1);
@@ -193,7 +193,7 @@ prog_params parseCmdArgs(int argc, char **argv) {
         TCLAP::ValueArg<std::string> electionArg("e", "election", "Election type: 'periodic' holds elections at fixed periods; "
                 "'random' holds an election in each period with a random probability.",
                 //; 'normal' draws each election interval from a truncated normal distribution.",
-                false, p.etype == elect_periodic ? "periodic" : "random",
+                false, p.etype == election::periodic ? "periodic" : "random",
                 &electionValues, cmd);
 
         RangeConstraint<unsigned int> ePeriodConstr(1);
@@ -205,8 +205,8 @@ prog_params parseCmdArgs(int argc, char **argv) {
         p.parties = partiesArg.getValue();
         p.constr_parties = constrArg.getValue();
         p.voters = votersArg.getValue();
-        p.vdist = distArg.getValue() == "even" ? dist_even : distArg.getValue() == "uniform" ? dist_uniform :
-            distArg.getValue() == "beta22" ? dist_beta22 : dist_beta55;
+        p.vdist = distArg.getValue() == "even" ? dist::even : distArg.getValue() == "uniform" ? dist::uniform :
+            distArg.getValue() == "beta22" ? dist::beta22 : dist::beta55;
         p.show_hist = histArg.getValue();
         p.friend_prob = friendArg.getValue();
         p.influence_prob = inflArg.getValue();
@@ -214,7 +214,7 @@ prog_params parseCmdArgs(int argc, char **argv) {
         p.constr_left = constrLeftArg.getValue();
         p.drift = driftArg.getValue();
         p.iterations = iterArg.getValue();
-        p.etype = electionArg.getValue() == "periodic" ? elect_periodic : elect_random;
+        p.etype = electionArg.getValue() == "periodic" ? election::periodic : election::random;
         p.eperiod = ePeriodArg.getValue();
 
         return p;
@@ -231,8 +231,8 @@ int main(int argc, char **argv) {
     std::string run_details = std::to_string(params.parties) + " parties (" +
         (params.constr_parties ? "" : "un") + "constrained), " +
         std::to_string(params.voters) + " voters (initial dist: " +
-        (params.vdist == dist_even ? "even" : params.vdist == dist_uniform ? "uniform" :
-         params.vdist == dist_beta22 ? "beta(2,2)" : "beta(5,5)") +
+        (params.vdist == dist::even ? "even" : params.vdist == dist::uniform ? "uniform" :
+         params.vdist == dist::beta22 ? "beta(2,2)" : "beta(5,5)") +
         "); F=" + std::to_string(params.friend_prob) + "; I=" + std::to_string(params.influence_prob) +
         "; A=" + std::to_string(params.influence_all) + "; D=" + std::to_string(params.drift);
 
@@ -272,11 +272,11 @@ int main(int argc, char **argv) {
 
     auto rng = Random::rng();
     std::function<double(int)> positioner;
-    if (params.vdist == dist_even) {
+    if (params.vdist == dist::even) {
         // Uniform initial positioner:
         positioner = [&](int i) -> double { return -1 + 2 * i / (params.voters - 1.0); };
     }
-    else if (params.vdist == dist_uniform) {
+    else if (params.vdist == dist::uniform) {
         // Random uniform initial positioner:
         std::uniform_real_distribution<double> runif(-1.0, 1.0);
         positioner = [&](int i) -> double { return runif(rng); };
@@ -284,6 +284,8 @@ int main(int argc, char **argv) {
     else {
         // Random beta(a,b) distributed (rescaled from [0,1] to [-1,1])
         double beta_a = 5.0, beta_b = 5.0;
+        if (params.vdist == dist::beta22) { beta_a = 2.0; beta_b = 2.0; }
+
         std::gamma_distribution<double> gamma_a(beta_a, 1), gamma_b(beta_b, 1);
         positioner = [&](int i) -> double {
             double x = gamma_a(rng);
@@ -309,7 +311,7 @@ int main(int argc, char **argv) {
 
     auto pollster = sim->createAgent<Poll>();
 
-    SharedMember<FPTP> election = (params.etype == elect_periodic)
+    SharedMember<FPTP> election = (params.etype == election::periodic)
         ? sim->createAgent<FPTP>(params.eperiod)
         : sim->createAgent<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
 
@@ -317,9 +319,9 @@ int main(int argc, char **argv) {
     filename << "results/elections:p" << params.parties << (params.constr_parties ? ",c" : ",!c");
     if (params.constr_left > 1) filename << ",!L"; else filename << ",L=" << params.constr_left;
     filename << ",v" << params.voters;
-    filename << ",d" << (params.voters == dist_even ? "even" : params.voters == dist_uniform ? "uniform" : params.voters == dist_beta22 ? "beta22" : "beta55");
+    filename << ",d" << (params.vdist == dist::even ? "even" : params.vdist == dist::uniform ? "uniform" : params.vdist == dist::beta22 ? "beta22" : "beta55");
     filename << ",i" << params.iterations << ",F" << params.friend_prob << ",I" << params.influence_prob << ",D" << params.drift;
-    filename << (params.influence_all ? ",A" : ",!A") << ",e" << (params.etype == elect_periodic ? "periodic" : "random");
+    filename << (params.influence_all ? ",A" : ",!A") << ",e" << (params.etype == election::periodic ? "periodic" : "random");
     filename << ",E" << params.eperiod << ",seed=" << eris::Random::seed() << ".data";
 
     std::ofstream outfile;
