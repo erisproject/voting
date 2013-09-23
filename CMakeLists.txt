@@ -55,7 +55,6 @@ foreach(v_r ${voting_R})
 endforeach()
 
 add_subdirectory(doc EXCLUDE_FROM_ALL)
-add_subdirectory(report EXCLUDE_FROM_ALL)
 
 #add_library(eris SHARED ${eris_src})
 

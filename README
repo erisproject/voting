@@ -1,12 +1,14 @@
-Voting project using eris.
+Eris-based voting model
 
-Course paper for ECON 910, Queen's Economics Department, Queen's University, Canada.
+Developed for course paper for ECON 910, Queen's Economics Department, Queen's
+University, Canada.
 
 Author: Jason Rhinelander, jason@imaginary.ca
 
 
-Licence
+License
 -------
+
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
