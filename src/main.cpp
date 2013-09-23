@@ -176,13 +176,13 @@ prog_params parseCmdArgs(int argc, char **argv) {
 
         TCLAP::ValueArg<double> friendArg("F", "friend-probability", "The probability of any voter being a friend of any other voter",
                 false, p.friend_prob, &friendConstr, cmd);
-        TCLAP::ValueArg<double> inflArg("I", "influence-probability", "The probability that a voter will attempt to exhert influence on each friend",
+        TCLAP::ValueArg<double> inflArg("I", "influence-probability", "The probability that a voter will attempt to exert influence on each friend",
                 false, p.influence_prob, &inflConstr, cmd);
         TCLAP::ValueArg<double> driftArg("D", "drift-rate", "The speed at which influenced friends drift back to their initial location",
                 false, p.drift, &driftConstr, cmd);
 
-        TCLAP::SwitchArg inflAllArg("A", "influence-all", "If provided, voters attempt to exhert influence on their entire set of friends at once, with probability given by -I.  The default "
-                "behaviour attempts to exhert influence on each voter with the probability given by -I.",
+        TCLAP::SwitchArg inflAllArg("A", "influence-all", "If provided, voters attempt to exert influence on their entire set of friends at once, with probability given by -I.  The default "
+                "behaviour attempts to exert influence on each voter with the probability given by -I.",
                 cmd, p.influence_all);
 
         std::vector<std::string> electionTypes;
