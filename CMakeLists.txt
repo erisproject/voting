@@ -18,6 +18,7 @@ include_directories(include)
 file(GLOB_RECURSE voting_include RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} include/*.h include/*.hpp)
 file(GLOB_RECURSE voting_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/voting/*.cpp)
 file(GLOB voting_scripts RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cpp)
+file(GLOB voting_R RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.R)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/results)
 
@@ -43,6 +44,10 @@ foreach(v_src ${voting_scripts})
     add_executable("${v}" "${v_src}")
     target_link_libraries("${v}" ${ERIS_LIB})
     target_link_libraries("${v}" voting)
+endforeach()
+
+foreach(v_r ${voting_R})
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/${v_r}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 
 add_subdirectory(report EXCLUDE_FROM_ALL)
