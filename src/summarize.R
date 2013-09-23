@@ -1,8 +1,8 @@
-for (p in 2:4) {
+for (p in 3:4) {
     for (constr in c("none", "all", -0.1, -0.2)) {
         carg <- ifelse(constr == "all", "c", "!c");
         larg <- ifelse(constr == "none" || constr == "all", "!L", paste(sep="", "L=", constr));
-        for (dist in c("beta55", "even")) {
+        for (dist in c("beta55")) {
             for (v in c(999)) for (i in c(1000)) for (f in c(0.01)) for (I in c(0.1)) for (D in 0.05) for (A in c(F)) for (e in c("periodic")) for (E in c(10)) {
                 opts <- paste(sep="",
                               "p",p,",",
@@ -32,15 +32,11 @@ for (p in 2:4) {
                     #print(names(data));
                     
                   }
-                  cat("mean:", mean(means), "\n");
-                  cat("sd:", sd(means), "\n");
-                  cat("5-num summ.:", fivenum(means), "\n");
+                  cat("p", p, "constr", constr, "&", paste(sep=" & ", c(mean(means), sd(means), fivenum(means)), collapse=" & "), "\n");
                   
-                  cat("\nWithout left-most party:\n");
-                  cat("win frequency:", mean(freqmL), "\n");
-                  cat("mean:", mean(meansmL), "\n");
-                  cat("sd:", sd(meansmL), "\n");
-                  cat("5-num summ.:", fivenum(meansmL), "\n\n\n");
+                  cat("w/o left: p", p, "constr", constr, "&", paste(sep=" & ", collapse=" & ", c(mean(freqmL), mean(meansmL), sd(meansmL), fivenum(meansmL))), "\n");
+
+                  cat("\n\n");
                 }
             }
         }
