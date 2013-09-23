@@ -20,8 +20,6 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/MathJax DESTINATION ${CMAKE_CURRENT_BINARY
     PATTERN "unpacked" EXCLUDE
     )
 
-message("voting_inc: ${voting_include}")
-
 # Use a custom command to output doxygen's generated index file.  Doing it this way ensures
 # that 'make doc' only runs doxygen when something in src or include has changed.
 add_custom_command(OUTPUT "api/index.xhtml"
