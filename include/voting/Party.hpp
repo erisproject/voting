@@ -12,7 +12,10 @@ using eris::agent::PositionalAgent;
  */
 class Party : public PositionalAgent {
     public:
-        using PositionalAgent::PositionalAgent;
+        // Inherited constructors is ideal here, but support is lacking, so just replicate the one
+        // we used:
+        //using PositionalAgent::PositionalAgent;
+        Party(double p, double b1, double b2) : PositionalAgent(p, b1, b2) {}
 
         /** Overridden to make movements bind to the position boundaries. 
          */

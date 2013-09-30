@@ -13,7 +13,10 @@ using eris::agent::PositionalAgent;
  */
 class Voter : public PositionalAgent {
     public:
-        using PositionalAgent::PositionalAgent;
+        // Inherited constructors is ideal here, but support is lacking, so just replicate the one
+        // we used:
+        //using PositionalAgent::PositionalAgent;
+        Voter(double p, double b1, double b2) : PositionalAgent(p, b1, b2) {}
 
         /** Returns true if the given voter is a friend of this voter. */
         bool isFriend(eris_id_t voter) const;
