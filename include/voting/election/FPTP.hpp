@@ -14,7 +14,17 @@ namespace voting {
  */
 class FPTP : public Election {
     public:
-        using Election::Election;
+        //using Election::Election;
+
+		/** Creates an election that occurs every `period` simulation periods.
+		 */
+		FPTP(unsigned int period) : Election(period) {}
+
+		/** Creates an election that occurs every time the given function/lambda returns true.  The
+		 * function will be called exactly once per inter-optimization, and, when it returns true,
+		 * will cause the following period to be an election round.
+		 */
+		FPTP(std::function<bool()> callElection) : Election(callElection) {}
 
         /** Conducts and election (if one hasn't been performed already) and returns the winner.
          */
