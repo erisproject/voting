@@ -46,14 +46,14 @@ void voterHist(const Eris<Simulation> &sim) {
         for (auto &count : bins) {
             int eighths = count - i * 8;
 
-            row << (eighths >= 8 ? u8"█" :
-                    eighths == 7 ? u8"▇" :
-                    eighths == 6 ? u8"▆" :
-                    eighths == 5 ? u8"▅" :
-                    eighths == 4 ? u8"▄" :
-                    eighths == 3 ? u8"▃" :
-                    eighths == 2 ? u8"▂" :
-                    eighths == 1 ? u8"▁" : " ");
+            row << (eighths >= 8 ? u8"\u2588" :
+                    eighths == 7 ? u8"\u2587" :
+                    eighths == 6 ? u8"\u2586" :
+                    eighths == 5 ? u8"\u2585" :
+                    eighths == 4 ? u8"\u2584" :
+                    eighths == 3 ? u8"\u2583" :
+                    eighths == 2 ? u8"\u2582" :
+                    eighths == 1 ? u8"\u2581" : " ");
         }
         row << "\n";
         rows.push_front(row.str());
@@ -77,17 +77,17 @@ void voterHist(const Eris<Simulation> &sim) {
     for (auto &count : party_bins) {
         std::cout << (
                 count > 4 ? std::to_string(count) :
-                count == 4 ? u8"█" :
-                count == 3 ? u8"▓" :
-                count == 2 ? u8"▒" :
-                count == 1 ? u8"░" :
+                count == 4 ? u8"\u2588" :
+                count == 3 ? u8"\u2593" :
+                count == 2 ? u8"\u2592" :
+                count == 1 ? u8"\u2591" :
                              " ");
     }
     std::cout << "\n\n";
 }
 
 enum class dist { even, uniform, beta22, beta55 };
-enum class election { periodic, random }; //, normal };
+enum class election { periodic, random };
 struct prog_params {
     unsigned int voters = 999;
     unsigned int parties = 3;
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
     // Used for output purposes: party 0 is left-most, 1 is second-left-most, etc.
     std::map<eris_id_t, int> parties;
 
-    for (int i = 1; i <= params.parties; i++) {
+    for (unsigned int i = 1; i <= params.parties; i++) {
         double pos = -1.0 + i*2.0 / (params.parties+1);
         double left_con = -1.0, right_con = 1.0;
         if (params.constr_parties) {
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
     }
 
 
-    for (int i = 0; i < params.voters; i++) {
+    for (unsigned int i = 0; i < params.voters; i++) {
         auto voter = sim->createAgent<Voter>(positioner(i), -1, 1);
         sim->createInterOpt<Influence>(voter, params.influence_prob, params.drift, params.influence_all);
     }
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
 
     auto pollster = sim->createAgent<Poll>();
 
-    SharedMember<FPTP> election = (params.etype == election::periodic)
+    SharedMember<FPTP> election = (params.etype == ::election::periodic)
         ? sim->createAgent<FPTP>(params.eperiod)
         : sim->createAgent<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
 
@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
     filename << ",v" << params.voters;
     filename << ",d" << (params.vdist == dist::even ? "even" : params.vdist == dist::uniform ? "uniform" : params.vdist == dist::beta22 ? "beta22" : "beta55");
     filename << ",i" << params.iterations << ",F" << params.friend_prob << ",I" << params.influence_prob << ",D" << params.drift;
-    filename << (params.influence_all ? ",A" : ",!A") << ",e" << (params.etype == election::periodic ? "periodic" : "random");
+    filename << (params.influence_all ? ",A" : ",!A") << ",e" << (params.etype == ::election::periodic ? "periodic" : "random");
     filename << ",E" << params.eperiod << ",seed=" << eris::Random::seed() << ".data";
 
     std::ofstream outfile;
@@ -349,15 +349,22 @@ int main(int argc, char **argv) {
     double winnerNL_mean = std::numeric_limits<double>::quiet_NaN();
     double winnerNL_sd = std::numeric_limits<double>::quiet_NaN();
 
+    sim->maxThreads(4);
+    sim->threadModel(Simulation::ThreadModel::Hybrid);
+    auto begin = steady_clock::now();
     auto last = steady_clock::now();
-    for (int i = 1; i <= params.iterations; i++) {
+    while (sim->t() < params.iterations) {
         sim->run();
         auto now = steady_clock::now();
-        double speed = i == 1
+        double speed = sim->t() == 1
             ? std::numeric_limits<double>::quiet_NaN()
             : 1.0/duration_cast<duration<double>>(now - last).count();
+        double avg_speed = sim->t() == 1
+            ? std::numeric_limits<double>::quiet_NaN()
+            : sim->t() / duration_cast<duration<double>>(now - begin).count();
+
         last = now;
-        printf("\e[3;0HIteration %d (%8.2f iterations/s)\n", i, speed);
+        printf("\e[3;0HIteration %ld (%8.2f iterations/s, avg: %8.2f iterations/s)\n", sim->t(), speed, avg_speed);
 
         if (params.show_hist)
             voterHist(sim);
@@ -380,7 +387,7 @@ int main(int argc, char **argv) {
                 }) / (winnerNL_pos.size() - 1));
             }
 
-            outfile << i << "," << parties[winner] << "," << pos << "\n";
+            outfile << sim->t() << "," << parties[winner] << "," << pos << "\n";
         }
 
         printf("Winning party positions: last: %8.6f, mean: %8.6f, sd: %8.6f\n",
