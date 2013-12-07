@@ -1,6 +1,7 @@
 #pragma once
 #include <eris/Position.hpp>
 #include <eris/agent/PositionalAgent.hpp>
+#include <eris/Optimize.hpp>
 #include <eris/Random.hpp>
 #include <unordered_map>
 
@@ -11,12 +12,12 @@ using eris::agent::PositionalAgent;
 
 /** A "Voter" eris agent.  A voter has a Position and a set of friends.
  */
-class Voter : public PositionalAgent {
+class Voter : public PositionalAgent, public virtual interopt::Advance {
     public:
         // Inherited constructors is ideal here, but support is lacking, so just replicate the one
         // we used:
         //using PositionalAgent::PositionalAgent;
-        Voter(double p, double b1, double b2) : PositionalAgent(p, b1, b2) {}
+        Voter(double p, double b1, double b2) : PositionalAgent({p}, {b1}, {b2}) {}
 
         /** Returns true if the given voter is a friend of this voter. */
         bool isFriend(eris_id_t voter) const;
@@ -106,7 +107,7 @@ class Voter : public PositionalAgent {
          * in the past), and drift is positive, the agent takes a step of length `drift` (or less,
          * if already within distance `drift`) towards their natural position.
          */
-        virtual void advance() override;
+        virtual void interAdvance() override;
 
     protected:
         /** The map of friends of this voter. */

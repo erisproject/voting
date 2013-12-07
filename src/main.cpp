@@ -4,7 +4,6 @@
 #include <eris/Random.hpp>
 #include "voting/Voter.hpp"
 #include "voting/Party.hpp"
-#include "voting/PartyMover.hpp"
 #include "voting/Poll.hpp"
 #include "voting/Influence.hpp"
 #include "voting/election/FPTP.hpp"
@@ -32,8 +31,8 @@ void voterHist(const Eris<Simulation> &sim) {
     const double bin_end = 1;
     const double bin_width = (bin_end - bin_start) / bin_count;
     std::vector<int> bins(bin_count+1, 0);
-    for (auto v: sim->agentFilter<Voter>()) {
-        double p = v.second->position()[0];
+    for (auto v: sim->agents<Voter>()) {
+        double p = v->position()[0];
         unsigned int bin = p < bin_start ? 0 : (p - bin_start) / bin_width;
         if (bin >= bins.size()) bin = bins.size()-1;
         bins[bin]++;
@@ -68,8 +67,8 @@ void voterHist(const Eris<Simulation> &sim) {
     std::cout << ">\n";
 
     std::vector<int> party_bins(bin_count+1, 0);
-    for (auto pp: sim->agentFilter<Party>()) {
-        double p = pp.second->position()[0];
+    for (auto pp: sim->agents<Party>()) {
+        double p = pp->position()[0];
         unsigned int bin = p < bin_start ? 0 : (p - bin_start) / bin_width;
         if (bin >= party_bins.size()) bin = party_bins.size()-1;
         party_bins[bin]++;
@@ -98,6 +97,7 @@ struct prog_params {
     bool influence_all = false;
     bool constr_parties = false;
     bool show_hist = false;
+    bool skip_file = false;
     double constr_left = 2; // Anything > 1 is considered unset.
     dist vdist = dist::beta55;
     election etype = election::periodic;
@@ -142,6 +142,9 @@ prog_params parseCmdArgs(int argc, char **argv) {
 
         TCLAP::SwitchArg constrArg("c", "constrained", "Constrain parties to +/- 0.5 of initial location.",
                 cmd, p.constr_parties);
+
+        TCLAP::SwitchArg skipArg("", "skip-file", "Don't create the output results file.",
+                cmd, p.skip_file);
 
         RangeConstraint<double> constrLeftConstr(-1, 1);
         TCLAP::ValueArg<double> constrLeftArg("L", "constrain-left-below", "The upper constraint for the left-most party.  Defaults to 1 (unconstrained) if parties are not constrained, "
@@ -204,6 +207,7 @@ prog_params parseCmdArgs(int argc, char **argv) {
 
         p.parties = partiesArg.getValue();
         p.constr_parties = constrArg.getValue();
+        p.skip_file = skipArg.getValue();
         p.voters = votersArg.getValue();
         p.vdist = distArg.getValue() == "even" ? dist::even : distArg.getValue() == "uniform" ? dist::uniform :
             distArg.getValue() == "beta22" ? dist::beta22 : dist::beta55;
@@ -251,7 +255,7 @@ int main(int argc, char **argv) {
         if (i == 1 and params.constr_left <= 1) {
             right_con = params.constr_left;
         }
-        auto p = sim->createAgent<Party>(pos, left_con, right_con);
+        auto p = sim->create<Party>(pos, left_con, right_con);
 
         parties[p] = i;
     }
@@ -296,24 +300,24 @@ int main(int argc, char **argv) {
 
 
     for (unsigned int i = 0; i < params.voters; i++) {
-        auto voter = sim->createAgent<Voter>(positioner(i), -1, 1);
-        sim->createInterOpt<Influence>(voter, params.influence_prob, params.drift, params.influence_all);
+        auto voter = sim->create<Voter>(positioner(i), -1, 1);
+        sim->create<Influence>(voter, params.influence_prob, params.drift, params.influence_all);
     }
 
     std::bernoulli_distribution friend_flip(params.friend_prob);
     // Create some friendships
-    for (auto &v1 : sim->agentFilter<Voter>()) {
-        for (auto &v2 : sim->agentFilter<Voter>()) {
-            if (v1.first != v2.first and friend_flip(rng))
-                v1.second->addFriend(v2.first);
+    for (auto &v1 : sim->agents<Voter>()) {
+        for (auto &v2 : sim->agents<Voter>()) {
+            if (v1 != v2 and friend_flip(rng))
+                v1->addFriend(v2);
         }
     }
 
-    auto pollster = sim->createAgent<Poll>();
+    auto pollster = sim->create<Poll>();
 
     SharedMember<FPTP> election = (params.etype == ::election::periodic)
-        ? sim->createAgent<FPTP>(params.eperiod)
-        : sim->createAgent<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
+        ? sim->create<FPTP>(params.eperiod)
+        : sim->create<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
 
     std::ostringstream filename;
     filename << "results/elections:p" << params.parties << (params.constr_parties ? ",c" : ",!c");
@@ -325,13 +329,15 @@ int main(int argc, char **argv) {
     filename << ",E" << params.eperiod << ",seed=" << eris::Random::seed() << ".data";
 
     std::ofstream outfile;
-    outfile.open(filename.str(), std::ofstream::out | std::ofstream::trunc);
-    if (!outfile) {
-        std::perror(("Unable to write to " + filename.str() + ": ").c_str());
-        exit(1);
+    if (not params.skip_file) {
+        outfile.open(filename.str(), std::ofstream::out | std::ofstream::trunc);
+        if (!outfile) {
+            std::perror(("Unable to write to " + filename.str() + ": ").c_str());
+            exit(1);
+        }
+        outfile.precision(18);
+        outfile << "t,winner,position\n";
     }
-    outfile.precision(18);
-    outfile << "t,winner,position\n";
 
     std::cout << "\e[?25l"; // Hide cursor (from `tput civis`)
     std::cout << "\e[2J"; // clear screen
@@ -341,7 +347,8 @@ int main(int argc, char **argv) {
 
     std::cout << "\e[1;0H"; // Position at line 0, col 0
     std::cout << "Running (" << run_details << ")\n";
-    std::cout << "Results data: " << filename.str() << "\n";
+    if (not params.skip_file)
+        std::cout << "Results data: " << filename.str() << "\n";
 
     std::list<double> winner_pos, winnerNL_pos;
     double winner_mean = std::numeric_limits<double>::quiet_NaN();
@@ -350,7 +357,6 @@ int main(int argc, char **argv) {
     double winnerNL_sd = std::numeric_limits<double>::quiet_NaN();
 
     sim->maxThreads(4);
-    sim->threadModel(Simulation::ThreadModel::Hybrid);
     auto begin = steady_clock::now();
     auto last = steady_clock::now();
     while (sim->t() < params.iterations) {
@@ -387,7 +393,8 @@ int main(int argc, char **argv) {
                 }) / (winnerNL_pos.size() - 1));
             }
 
-            outfile << sim->t() << "," << parties[winner] << "," << pos << "\n";
+            if (not params.skip_file)
+                outfile << sim->t() << "," << parties[winner] << "," << pos << "\n";
         }
 
         printf("Winning party positions: last: %8.6f, mean: %8.6f, sd: %8.6f\n",
@@ -400,6 +407,7 @@ int main(int argc, char **argv) {
 
     std::cout << "\e[?12;25h"; // Restore cursor (from `tput cvvis`)
 
-    outfile.close();
+    if (not params.skip_file)
+        outfile.close();
 
 }

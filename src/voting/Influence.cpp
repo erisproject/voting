@@ -8,7 +8,7 @@ namespace voting {
 Influence::Influence(eris_id_t voter, double probability, double drift, bool influence_all)
     : voter_(voter), prob_(probability), drift_(drift), infl_all_(influence_all) {}
 
-void Influence::apply() {
+void Influence::interApply() {
     auto voter = simAgent<Voter>(voter_);
     auto friends = voter->friends();
     auto infls = influencees(friends);

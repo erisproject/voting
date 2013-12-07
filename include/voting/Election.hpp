@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
 #include <eris/Agent.hpp>
-#include <eris/InterOptimizer.hpp>
+#include <eris/Optimize.hpp>
 
 namespace voting {
 
@@ -15,7 +15,7 @@ using eris::eris_id_t;
  * This is an abstract class in that it doesn't actually implement calculation of the winner;
  * subclasses must provide the election() method to do that.
  */
-class Election : public eris::Agent {
+class Election : public eris::Agent, public virtual eris::interopt::Advance {
     public:
 		/** Creates an election that occurs every `period` simulation periods.
 		 */
@@ -38,7 +38,7 @@ class Election : public eris::Agent {
         /** Advances, checking whether an election should be called.  If so, electionPeriod() will
          * return true until the following advance.
          */
-        virtual void advance() override;
+        virtual void interAdvance() override;
 
 	private:
         bool election_period_ = false;

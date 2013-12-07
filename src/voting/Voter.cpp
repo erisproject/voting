@@ -30,8 +30,8 @@ double Voter::friendDistance(eris_id_t voter) const {
 
 double Voter::conviction() const {
     double min_dist = 2.0;
-    for (auto &p : simulation()->agentFilter<Party>()) {
-        double pdist = position().distance(p.second->position());
+    for (auto &p : simulation()->agents<Party>()) {
+        double pdist = position().distance(p->position());
         if (pdist < min_dist) min_dist = pdist;
     }
     return std::max(1.0 - min_dist, 0.0);
@@ -97,9 +97,7 @@ double Voter::drift() const {
         : 0.0;
 }
 
-void Voter::advance() {
-    PositionalAgent::advance();
-
+void Voter::interAdvance() {
     if (just_moved_) {
         just_moved_ = false;
     }

@@ -8,24 +8,24 @@ eris_id_t FPTP::election() {
     // Already had an election
     if (winner_ > 0) return winner_;
 
-    auto parties = simulation()->agentFilter<Party>();
+    auto parties = simulation()->agents<Party>();
     if (parties.empty()) throw std::runtime_error("Cannot conduct an election without any parties");
-    auto voters = simulation()->agentFilter<Voter>();
+    auto voters = simulation()->agents<Voter>();
     if (voters.empty()) throw std::runtime_error("Cannot conduct an election without any voters");
 
     votes_.clear();
     
     for (auto &p : parties)
-        votes_[p.first] = 0;
+        votes_[p] = 0;
 
     for (auto &v : voters) {
         eris_id_t closest = 0;
         double min_dist = 0.0;
         int identical = 0;
         for (auto &p : parties) {
-            double dist = v.second->distance(p.second);
+            double dist = v->distance(p);
             if (closest == 0 or dist < min_dist) {
-                closest = p.first;
+                closest = p;
                 min_dist = dist;
                 identical = 1;
             }
@@ -34,7 +34,7 @@ eris_id_t FPTP::election() {
                 // that each equal-distance party has an equal chance of being chosen
                 if (++identical > 1) {
                     if (std::bernoulli_distribution(1.0 / identical)(eris::Random::rng())) {
-                        closest = p.first;
+                        closest = p;
                     }
                 }
             }
@@ -71,8 +71,8 @@ const std::unordered_map<eris_id_t, int>& FPTP::votes() {
     return votes_;
 }
 
-void FPTP::advance() {
-    Election::advance();
+void FPTP::interAdvance() {
+    Election::interAdvance();
     winner_ = 0;
     votes_.clear();
 }

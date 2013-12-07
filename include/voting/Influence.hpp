@@ -1,5 +1,5 @@
 #pragma once
-#include <eris/InterOptimizer.hpp>
+#include <eris/Optimize.hpp>
 #include "voting/Voter.hpp"
 #include <list>
 
@@ -10,7 +10,7 @@ using eris::eris_id_t;
 
 /** This class handles the inter-period influence adjustments of voters on other voters.
  */
-class Influence : public InterOptimizer {
+class Influence : public eris::Member, public virtual eris::interopt::Apply {
     public:
         /** Creates a new Influence inter-period optimizer attached to the given voter.  After each
          * period, with probability `probability`, the voter will become an activist.  An activist
@@ -41,7 +41,7 @@ class Influence : public InterOptimizer {
         Influence(eris_id_t voter, double probability, double drift = 0.0, bool influence_all = true);
 
         /** Applies influence. */
-        virtual void apply();
+        virtual void interApply() override;
 
     protected:
         eris_id_t voter_;

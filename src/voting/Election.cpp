@@ -18,7 +18,7 @@ bool Election::electionPeriod() const {
     return election_period_;
 }
 
-void Election::advance() {
+void Election::interAdvance() {
     election_period_ = election_();
 }
 

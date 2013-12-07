@@ -12,7 +12,7 @@ namespace voting {
  * two or more parties are tied for the highest number of votes, the winner is determined randomly.
  * Each voter votes for the nearest party, randomizing to resolve ties.
  */
-class FPTP : public Election {
+class FPTP : public Election, public virtual eris::interopt::Advance {
     public:
         //using Election::Election;
 
@@ -32,7 +32,7 @@ class FPTP : public Election {
 
         /** Resets the winner and vote tallies when advancing.
          */
-        virtual void advance() override;
+        virtual void interAdvance() override;
 
         /** Returns the map of parties to votes each party received in the election.  Performs the
          * election first, if it hasn't yet been performed.
