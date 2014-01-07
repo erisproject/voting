@@ -66,7 +66,7 @@ eris_id_t FPTP::election() {
 
 
 const std::unordered_map<eris_id_t, int>& FPTP::votes() {
-    if (not winner_ > 0) election();
+    if (not (winner_ > 0)) election();
 
     return votes_;
 }
