@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
     else if (params.vdist == dist::uniform) {
         // Random uniform initial positioner:
         std::uniform_real_distribution<double> runif(-1.0, 1.0);
-        positioner = [&](int i) -> double { return runif(rng); };
+        positioner = [&](int) -> double { return runif(rng); };
     }
     else {
         // Random beta(a,b) distributed (rescaled from [0,1] to [-1,1])
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
         if (params.vdist == dist::beta22) { beta_a = 2.0; beta_b = 2.0; }
 
         std::gamma_distribution<double> gamma_a(beta_a, 1), gamma_b(beta_b, 1);
-        positioner = [&](int i) -> double {
+        positioner = [&](int) -> double {
             double x = gamma_a(rng);
             double y = gamma_b(rng);
             return -1 + 2 * (x / (x + y));
