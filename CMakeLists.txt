@@ -39,7 +39,8 @@ find_library(
     NAMES eris
     HINTS "${ERIS_BUILD_SAME}" "${ERIS_BUILD_BUILD}")
 
-add_definitions(-std=c++11 -Wall -Werror)
+set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -O3 ${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DERIS_DEBUG")
 
 add_library(voting ${voting_src})
 
