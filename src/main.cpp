@@ -21,6 +21,7 @@
 #include <limits>
 #include <map>
 #include <tclap/CmdLine.h>
+#include <thread>
 
 using namespace voting;
 using namespace std::chrono;
@@ -102,6 +103,7 @@ struct prog_params {
     dist vdist = dist::beta55;
     election etype = election::periodic;
     unsigned int eperiod = 50;
+    unsigned int max_threads = std::thread::hardware_concurrency();
 //    double enorm_mean = 50;
 //    double enorm_stdev = 50;
 };
@@ -170,6 +172,11 @@ prog_params parseCmdArgs(int argc, char **argv) {
         TCLAP::ValueArg<unsigned int> iterArg("i", "iterations", "Number of simulation iterations", false, p.iterations,
                 &iterConstr, cmd);
 
+        RangeConstraint<unsigned int> thrConstr(0);
+        TCLAP::ValueArg<unsigned int> thrArg("t", "max-threads", std::string("Maximum number of threads to use.  The default is the level of "
+                "concurrency supported by your hardware (") + std::to_string(p.max_threads) + ")", false, p.max_threads,
+                &thrConstr, cmd);
+
         TCLAP::SwitchArg histArg("H", "histogram", "Show histogram of voter positions with party positions after each iteration.  Requires "
                 "a terminal supporting/expecting UTF-8 output.", cmd, p.show_hist);
 
@@ -218,6 +225,7 @@ prog_params parseCmdArgs(int argc, char **argv) {
         p.constr_left = constrLeftArg.getValue();
         p.drift = driftArg.getValue();
         p.iterations = iterArg.getValue();
+        p.max_threads = thrArg.getValue();
         p.etype = electionArg.getValue() == "periodic" ? election::periodic : election::random;
         p.eperiod = ePeriodArg.getValue();
 
@@ -356,7 +364,7 @@ int main(int argc, char **argv) {
     double winnerNL_mean = std::numeric_limits<double>::quiet_NaN();
     double winnerNL_sd = std::numeric_limits<double>::quiet_NaN();
 
-    sim->maxThreads(4);
+    sim->maxThreads(params.max_threads);
     auto begin = steady_clock::now();
     auto last = steady_clock::now();
     while (sim->t() < params.iterations) {
