@@ -26,20 +26,14 @@ file(GLOB voting_R src/*.R)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/results)
 
-# Add eris
-# If we're building in "foo", look for ../eris/foo for eris build dir, then
-# fall back to ../eris/build if that doesn't work.
-get_filename_component(BUILD_BASENAME "${CMAKE_BINARY_DIR}" NAME)
-set(ERIS_INCLUDE eris/include)
-set(ERIS_BUILD_SAME "eris/${BUILD_BASENAME}")
-set(ERIS_BUILD_BUILD eris/build)
-include_directories(${ERIS_INCLUDE})
-find_library(
-    ERIS_LIB
-    NAMES eris
-    HINTS "${ERIS_BUILD_SAME}" "${ERIS_BUILD_BUILD}")
+# Use pkg-config to find the includes/libs for eris
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(ERIS REQUIRED liberis)
+include_directories(${ERIS_INCLUDE_DIRS})
+link_directories(${ERIS_LIBRARY_DIRS})
+add_definitions(${ERIS_CFLAGS_OTHER})
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -O3 ${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -O3 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DERIS_DEBUG")
 
 add_library(voting ${voting_src})
@@ -47,7 +41,7 @@ add_library(voting ${voting_src})
 foreach(v_src ${voting_scripts})
     get_filename_component(v "${v_src}" NAME_WE)
     add_executable("${v}" "${v_src}")
-    target_link_libraries("${v}" ${ERIS_LIB})
+    target_link_libraries("${v}" ${ERIS_LIBRARIES})
     target_link_libraries("${v}" voting)
 endforeach()
 
@@ -57,21 +51,3 @@ endforeach()
 
 add_subdirectory(doc EXCLUDE_FROM_ALL)
 
-#add_library(eris SHARED ${eris_src})
-
-#set_target_properties(eris PROPERTIES
-#    VERSION "${LIBERIS_CURRENT}.${LIBERIS_AGE}.${LIBERIS_REVISION}"
-#    SOVERSION "${LIBERIS_CURRENT}"
-#)
-#
-#add_subdirectory(scratch)
-#
-#add_subdirectory(doc EXCLUDE_FROM_ALL)
-#
-#enable_testing()
-#
-#add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
-#add_subdirectory(tests EXCLUDE_FROM_ALL)
-#
-#add_custom_target(examples)
-#add_subdirectory(examples EXCLUDE_FROM_ALL)
