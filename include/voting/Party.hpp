@@ -1,6 +1,6 @@
 #pragma once
-#include <eris/Position.hpp>
-#include <eris/agent/PositionalAgent.hpp>
+#include <eris/Positional.hpp>
+#include <eris/Agent.hpp>
 #include <eris/Optimize.hpp>
 #include <unordered_map>
 #include <random>
@@ -8,16 +8,17 @@
 namespace voting {
 
 using eris::eris_id_t;
-using eris::agent::PositionalAgent;
+using eris::Positional;
+using eris::Agent;
 
 /** A "Party" eris agent.  A party has a Position and moves around.
  */
-class Party : public PositionalAgent, public virtual eris::interopt::OptApply  {
+class Party : public Positional<Agent>, public virtual eris::interopt::OptApply  {
     public:
         // Inherited constructors is ideal here, but support is lacking, so just replicate the one
         // we used:
-        //using PositionalAgent::PositionalAgent;
-        Party(double p, double b1, double b2) : PositionalAgent({p}, {b1}, {b2}) {}
+        //using Positional<Agent>::Positional<Agent>;
+        Party(double p, double b1, double b2) : Positional<Agent>({p}, {b1}, {b2}) {}
 
         /** Overridden to make movements bind to the position boundaries. 
          */

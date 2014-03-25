@@ -1,6 +1,6 @@
 #pragma once
-#include <eris/Position.hpp>
-#include <eris/agent/PositionalAgent.hpp>
+#include <eris/Positional.hpp>
+#include <eris/Agent.hpp>
 #include <eris/Optimize.hpp>
 #include <eris/Random.hpp>
 #include <unordered_map>
@@ -8,16 +8,15 @@
 namespace voting {
 
 using namespace eris;
-using eris::agent::PositionalAgent;
 
 /** A "Voter" eris agent.  A voter has a Position and a set of friends.
  */
-class Voter : public PositionalAgent, public virtual interopt::Advance {
+class Voter : public Positional<Agent>, public virtual interopt::Advance {
     public:
         // Inherited constructors is ideal here, but support is lacking, so just replicate the one
         // we used:
-        //using PositionalAgent::PositionalAgent;
-        Voter(double p, double b1, double b2) : PositionalAgent({p}, {b1}, {b2}) {}
+        //using Positional<Agent>::Positional<Agent>;
+        Voter(double p, double b1, double b2) : Positional<Agent>({p}, {b1}, {b2}) {}
 
         /** Returns true if the given voter is a friend of this voter. */
         bool isFriend(eris_id_t voter) const;
