@@ -5,7 +5,6 @@
 
 namespace voting {
 
-using eris::InterOptimizer;
 using eris::eris_id_t;
 
 /** This class handles the inter-period influence adjustments of voters on other voters.
