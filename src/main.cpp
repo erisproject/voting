@@ -103,7 +103,7 @@ struct prog_params {
     dist vdist = dist::beta55;
     election etype = election::periodic;
     unsigned int eperiod = 50;
-    unsigned int max_threads = std::thread::hardware_concurrency();
+    unsigned int max_threads = 0; //std::thread::hardware_concurrency();
 //    double enorm_mean = 50;
 //    double enorm_stdev = 50;
 };
@@ -173,8 +173,8 @@ prog_params parseCmdArgs(int argc, char **argv) {
                 &iterConstr, cmd);
 
         RangeConstraint<unsigned int> thrConstr(0);
-        TCLAP::ValueArg<unsigned int> thrArg("t", "max-threads", std::string("Maximum number of threads to use.  The default is the level of "
-                "concurrency supported by your hardware (") + std::to_string(p.max_threads) + ")", false, p.max_threads,
+        TCLAP::ValueArg<unsigned int> thrArg("t", "max-threads", "Maximum number of threads to use.  The default is to not use threads.",
+                false, p.max_threads,
                 &thrConstr, cmd);
 
         TCLAP::SwitchArg histArg("H", "histogram", "Show histogram of voter positions with party positions after each iteration.  Requires "
