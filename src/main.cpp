@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstdio>
+#include <csignal>
 #include <ctime>
 #include <chrono>
 #include <vector>
@@ -349,6 +350,13 @@ int main(int argc, char **argv) {
     std::cout << "\e[2J"; // clear screen
     std::cout << "\e[2;0H"; // Position at line 1, col 0
 
+    // Restore (unhide) cursor if we get interrupted (typically Ctrl-C)
+    std::signal(SIGINT, [](int) {
+        std::cout << "\e[?12;25h\n";
+        std::signal(SIGINT, SIG_DFL);
+        std::raise(SIGINT);
+    });
+
     if (params.show_hist) voterHist(sim);
 
     std::cout << "\e[1;0H"; // Position at line 0, col 0
@@ -411,7 +419,7 @@ int main(int argc, char **argv) {
 
     }
 
-    std::cout << "\e[?12;25h"; // Restore cursor (from `tput cvvis`)
+    std::cout << "\e[?12;25h\n"; // Restore (unhide) cursor (from `tput cvvis`)
 
     if (not params.skip_file)
         outfile.close();
