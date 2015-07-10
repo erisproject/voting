@@ -1,4 +1,3 @@
-#include <eris/Eris.hpp>
 #include <eris/Simulation.hpp>
 #include <eris/Position.hpp>
 #include <eris/Random.hpp>
@@ -26,7 +25,7 @@
 using namespace voting;
 using namespace std::chrono;
 
-void voterHist(const Eris<Simulation> &sim) {
+void voterHist(const std::shared_ptr<Simulation> &sim) {
     const int bin_count = 100; // NB: doesn't include +1 for the ">" bin
     const double bin_start = -1;
     const double bin_end = 1;
@@ -248,7 +247,7 @@ int main(int argc, char **argv) {
         "); F=" + std::to_string(params.friend_prob) + "; I=" + std::to_string(params.influence_prob) +
         "; A=" + std::to_string(params.influence_all) + "; D=" + std::to_string(params.drift);
 
-    Eris<Simulation> sim;
+    auto sim = Simulation::create();
 
     // Used for output purposes: party 0 is left-most, 1 is second-left-most, etc.
     std::map<eris_id_t, int> parties;
@@ -263,7 +262,7 @@ int main(int argc, char **argv) {
         if (i == 1 and params.constr_left <= 1) {
             right_con = params.constr_left;
         }
-        auto p = sim->create<Party>(pos, left_con, right_con);
+        auto p = sim->spawn<Party>(pos, left_con, right_con);
 
         parties[p] = i;
     }
@@ -282,7 +281,7 @@ int main(int argc, char **argv) {
     //  4: 11, 23, 35, 47, 71
     //  3: 5, 17, 29, 41, 53
 
-    auto rng = Random::rng();
+    auto &rng = Random::rng();
     std::function<double(int)> positioner;
     if (params.vdist == dist::even) {
         // Uniform initial positioner:
@@ -299,17 +298,16 @@ int main(int argc, char **argv) {
         if (params.vdist == dist::beta22) { beta_a = 2.0; beta_b = 2.0; }
 
         std::gamma_distribution<double> gamma_a(beta_a, 1), gamma_b(beta_b, 1);
-        positioner = [&](int) -> double {
+        positioner = [gamma_a,gamma_b,&rng](int) mutable -> double {
             double x = gamma_a(rng);
-            double y = gamma_b(rng);
-            return -1 + 2 * (x / (x + y));
+            return -1.0 + 2.0 * (x / (x + gamma_b(rng)));
         };
     }
 
 
     for (unsigned int i = 0; i < params.voters; i++) {
-        auto voter = sim->create<Voter>(positioner(i), -1, 1);
-        sim->create<Influence>(voter, params.influence_prob, params.drift, params.influence_all);
+        auto voter = sim->spawn<Voter>(positioner(i), -1, 1);
+        sim->spawn<Influence>(voter, params.influence_prob, params.drift, params.influence_all);
     }
 
     std::bernoulli_distribution friend_flip(params.friend_prob);
@@ -321,11 +319,11 @@ int main(int argc, char **argv) {
         }
     }
 
-    auto pollster = sim->create<Poll>();
+    auto pollster = sim->spawn<Poll>();
 
     SharedMember<FPTP> election = (params.etype == ::election::periodic)
-        ? sim->create<FPTP>(params.eperiod)
-        : sim->create<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
+        ? sim->spawn<FPTP>(params.eperiod)
+        : sim->spawn<FPTP>([&params,&rng]() -> bool { return std::bernoulli_distribution(1.0 / params.eperiod)(rng); });
 
     std::ostringstream filename;
     filename << "results/elections:p" << params.parties << (params.constr_parties ? ",c" : ",!c");
@@ -378,7 +376,7 @@ int main(int argc, char **argv) {
             : sim->t() / duration_cast<duration<double>>(now - begin).count();
 
         last = now;
-        printf("\e[3;0HIteration %ld (%8.2f iterations/s, avg: %8.2f iterations/s)\n", sim->t(), speed, avg_speed);
+        printf("\e[3;0HIteration %d (%8.2f iterations/s, avg: %8.2f iterations/s)\n", sim->t(), speed, avg_speed);
 
         if (params.show_hist)
             voterHist(sim);
