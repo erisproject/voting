@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
 
         if (election->electionPeriod()) {
             auto winner = sim->agent<Party>(election->election());
-            auto pos = winner->position().at(0);
+            auto pos = winner->position()[0];
             winner_pos.push_back(pos);
 
             winner_mean = std::accumulate(winner_pos.cbegin(), winner_pos.cend(), 0.0) / winner_pos.size();
