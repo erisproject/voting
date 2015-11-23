@@ -33,7 +33,7 @@ include_directories(${ERIS_INCLUDE_DIRS})
 link_directories(${ERIS_LIBRARY_DIRS})
 add_definitions(${ERIS_CFLAGS_OTHER})
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -O3 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DERIS_DEBUG")
 
 add_library(voting ${voting_src})
